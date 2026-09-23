@@ -3,6 +3,7 @@ export type Business = {
   name: string;
   slug: string;
   googleReviewUrl: string;
+  logoUrl?: string;
 };
 
 export const businesses: Business[] = [
