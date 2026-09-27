@@ -52,6 +52,10 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* =========================
+   PÁGINAS DE NEGOCIO
+   ========================= */
+
 .toca-page {
   position: relative;
   min-height: 100svh;
@@ -174,7 +178,7 @@ a {
   line-height: 1.5;
 }
 
-/* Ondas NFC */
+/* Ondas NFC de las páginas de negocio */
 
 .nfc-decoration {
   position: absolute;
@@ -195,6 +199,66 @@ a {
   top: -120px;
   transform: rotate(180deg);
 }
+
+/* =========================
+   PORTADA TOCA
+   ========================= */
+
+.home {
+  position: relative;
+  min-height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.home-logo {
+  position: relative;
+  z-index: 2;
+  width: 220px;
+  height: auto;
+}
+
+.home h1 {
+  position: relative;
+  z-index: 2;
+  margin: 32px 0 0;
+  max-width: 700px;
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  font-weight: 700;
+}
+
+/* Ondas NFC de la portada */
+
+.home-nfc-waves {
+  position: absolute;
+  z-index: 1;
+  width: 520px;
+  height: 520px;
+  color: rgba(99, 102, 241, 0.20);
+  pointer-events: none;
+}
+
+.home-nfc-waves-left {
+  left: -180px;
+  bottom: -180px;
+}
+
+.home-nfc-waves-right {
+  right: -180px;
+  top: -180px;
+  transform: rotate(180deg);
+}
+
+/* =========================
+   ESCRITORIO
+   ========================= */
 
 @media (min-width: 768px) {
   .toca-header {
@@ -227,5 +291,24 @@ a {
   .nfc-decoration-right {
     right: -150px;
     top: -150px;
+  }
+
+  .home {
+    min-height: 100vh;
+  }
+
+  .home-nfc-waves {
+    width: 650px;
+    height: 650px;
+  }
+
+  .home-nfc-waves-left {
+    left: -220px;
+    bottom: -220px;
+  }
+
+  .home-nfc-waves-right {
+    right: -220px;
+    top: -220px;
   }
 }
