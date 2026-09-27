@@ -58,6 +58,7 @@ a {
 
 .toca-page {
   position: relative;
+  height: 100svh;
   min-height: 100svh;
   overflow: hidden;
   display: flex;
@@ -206,6 +207,7 @@ a {
 
 .home {
   position: relative;
+  height: 100svh;
   min-height: 100svh;
   overflow: hidden;
   display: flex;
@@ -291,10 +293,6 @@ a {
   .nfc-decoration-right {
     right: -150px;
     top: -150px;
-  }
-
-  .home {
-    min-height: 100vh;
   }
 
   .home-nfc-waves {
