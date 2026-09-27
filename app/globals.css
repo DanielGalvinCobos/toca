@@ -15,12 +15,14 @@
 
 html,
 body {
+  width: 100%;
+  height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 body {
-  min-height: 100vh;
   background:
     radial-gradient(
       circle at 0% 100%,
@@ -58,8 +60,9 @@ a {
 
 .toca-page {
   position: relative;
-  height: 100svh;
-  min-height: 100svh;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -207,8 +210,9 @@ a {
 
 .home {
   position: relative;
-  height: 100svh;
-  min-height: 100svh;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -293,6 +297,10 @@ a {
   .nfc-decoration-right {
     right: -150px;
     top: -150px;
+  }
+
+  .home {
+    min-height: 100%;
   }
 
   .home-nfc-waves {
