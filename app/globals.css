@@ -1,1105 +1,3078 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
+
+
 :root {
+
   --toca-violet: #6366f1;
+
   --toca-black: #111111;
+
   --toca-gray: #6b7280;
+
   --toca-light: #f5f5f7;
+
   --toca-border: #e5e7eb;
+
   --toca-white: #ffffff;
+
 }
+
+
 
 * {
+
   box-sizing: border-box;
+
 }
+
+
 
 html,
-body {
-  width: 100%;
-  min-height: 100%;
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden;
-}
 
 body {
-  background:
-    radial-gradient(
-      circle at 0% 100%,
-      rgba(99, 102, 241, 0.28),
-      transparent 38%
-    ),
-    radial-gradient(
-      circle at 100% 45%,
-      rgba(99, 102, 241, 0.22),
-      transparent 38%
-    ),
-    radial-gradient(
-      circle at 50% 0%,
-      rgba(99, 102, 241, 0.1),
-      transparent 42%
-    ),
-    #f3f3ff;
-  color: var(--toca-black);
-  font-family: "Plus Jakarta Sans", sans-serif;
+
+  width: 100%;
+
+  min-height: 100%;
+
+  margin: 0;
+
+  padding: 0;
+
+  overflow-x: hidden;
+
 }
+
+
+
+body {
+
+  background:
+
+    radial-gradient(
+
+      circle at 0% 100%,
+
+      rgba(99, 102, 241, 0.28),
+
+      transparent 38%
+
+    ),
+
+    radial-gradient(
+
+      circle at 100% 45%,
+
+      rgba(99, 102, 241, 0.22),
+
+      transparent 38%
+
+    ),
+
+    radial-gradient(
+
+      circle at 50% 0%,
+
+      rgba(99, 102, 241, 0.1),
+
+      transparent 42%
+
+    ),
+
+    #f3f3ff;
+
+  color: var(--toca-black);
+
+  font-family: "Plus Jakarta Sans", sans-serif;
+
+}
+
+
 
 a {
+
   color: inherit;
+
   text-decoration: none;
+
 }
+
+
 
 button,
+
 a {
+
   -webkit-tap-highlight-color: transparent;
+
 }
+
+
 
 /* =========================
+
    PÁGINAS DE NEGOCIO
+
    ========================= */
 
+
+
 .toca-page {
+
   position: relative;
+
   width: 100%;
+
   height: 100vh;
+
   height: 100dvh;
+
   min-height: 100%;
+
   overflow: hidden;
+
   display: flex;
+
   flex-direction: column;
+
 }
+
+
 
 .toca-header {
+
   width: 100%;
+
   padding: 28px 24px;
+
   display: flex;
+
   justify-content: center;
+
 }
+
+
 
 .toca-header img {
+
   width: 105px;
+
   height: auto;
+
 }
+
+
 
 .toca-main {
+
   position: relative;
+
   z-index: 1;
+
   flex: 1;
+
   width: 100%;
+
   max-width: 700px;
+
   margin: 0 auto;
+
   padding: 35px 24px 40px;
+
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   justify-content: center;
+
   text-align: center;
+
 }
+
+
 
 .business-name {
+
   margin: 0;
+
   font-size: clamp(2rem, 7vw, 3.25rem);
+
   line-height: 1.1;
+
   letter-spacing: -0.04em;
+
   font-weight: 700;
+
 }
+
+
 
 .business-logo {
+
   width: 92px;
+
   height: 92px;
+
   margin-bottom: 24px;
+
   border-radius: 50%;
+
   object-fit: contain;
+
 }
+
+
 
 .business-description {
+
   max-width: 340px;
+
   margin: 18px auto 30px;
+
   color: var(--toca-gray);
+
   font-size: 1rem;
+
   line-height: 1.6;
+
 }
+
+
 
 .review-button {
+
   width: min(100%, 360px);
+
   min-height: 60px;
+
   padding: 0 20px;
+
   display: flex;
+
   align-items: center;
+
   gap: 12px;
+
   border-radius: 18px;
+
   background: var(--toca-violet);
+
   color: var(--toca-white);
+
   font-size: 0.98rem;
+
   font-weight: 600;
+
   box-shadow: 0 12px 30px rgba(99, 102, 241, 0.22);
+
   transition:
+
     transform 0.15s ease,
+
     box-shadow 0.15s ease;
+
 }
+
+
 
 .review-button:hover {
+
   transform: translateY(-2px);
+
   box-shadow: 0 15px 34px rgba(99, 102, 241, 0.28);
+
 }
+
+
 
 .review-button:active {
+
   transform: scale(0.98);
+
 }
+
+
 
 .google-icon {
+
   width: 25px;
+
   height: 25px;
+
   flex-shrink: 0;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   border-radius: 50%;
+
   background: white;
+
 }
+
+
 
 .review-arrow {
+
   margin-left: auto;
+
   font-size: 1.2rem;
+
 }
+
+
 
 .toca-footer {
+
   position: relative;
+
   z-index: 1;
+
   padding: 28px 24px 30px;
+
   text-align: center;
+
 }
+
+
 
 .toca-footer-logo {
+
   width: 75px;
+
   height: auto;
+
   margin-bottom: 8px;
+
 }
 
+
+
 .toca-footer-slogan {
+
   margin: 0;
+
   color: var(--toca-gray);
+
   font-size: 0.72rem;
+
   line-height: 1.5;
+
 }
+
+
 
 /* Ondas NFC de las páginas de negocio */
 
+
+
 .nfc-decoration {
+
   position: absolute;
+
   z-index: 0;
+
   width: 500px;
+
   height: 500px;
+
   color: rgba(99, 102, 241, 0.16);
+
   pointer-events: none;
+
 }
+
+
 
 .nfc-decoration-left {
+
   left: -120px;
+
   bottom: -120px;
+
 }
+
+
 
 .nfc-decoration-right {
+
   right: -120px;
+
   top: -120px;
+
   transform: rotate(180deg);
+
 }
 
+
+
 /* =========================
+
    PORTADA TOCA
+
    ========================= */
+
+
 
 .home {
+
   position: relative;
+
   isolation: isolate;
+
   width: 100%;
+
   min-height: 100vh;
+
   min-height: 100dvh;
+
   overflow: hidden;
+
   display: flex;
+
   flex-direction: column;
+
   align-items: center;
+
   text-align: center;
+
   padding: 0 24px;
+
 }
 
+
+
 /* =========================
+
    INTRO / PRIMERA PÁGINA
+
    ========================= */
+
+
 
 .home-intro {
+
   position: relative;
+
   width: calc(100% + 48px);
+
   overflow: hidden;
+
 }
+
+
 
 .home-intro-decorations {
+
   position: absolute;
+
   inset: 0;
+
   overflow: hidden;
+
   pointer-events: none;
+
   z-index: 0;
+
 }
+
+
 
 .home-header {
+
   position: relative;
+
   z-index: 2;
+
   width: 100%;
+
   max-width: 1180px;
+
   margin: 0 auto;
+
   padding: 30px 24px;
+
   display: flex;
+
   justify-content: center;
+
 }
+
+
 
 .home-logo {
+
   width: 180px;
+
   height: auto;
+
 }
+
+
 
 /* =========================
+
    ONDAS DE LA PORTADA
+
    ========================= */
 
+
+
 .home-nfc-waves {
+
   position: absolute;
+
   width: 280px;
+
   height: 280px;
+
   color: rgba(99, 102, 241, 0.12);
+
   pointer-events: none;
+
 }
+
+
 
 /* Onda superior derecha */
 
+
+
 .home-nfc-waves-top-right {
+
   top: -90px;
+
   right: -90px;
+
   transform: rotate(270deg);
+
 }
+
+
 
 /* Onda inferior izquierda — compensada para que se vea igual que antes */
 
+
+
 .home-nfc-waves-bottom-left {
+
   bottom: -90px;
+
   left: -102px;
+
   transform: rotate(90deg);
+
 }
 
+
+
 /* =========================
+
    HERO
+
    ========================= */
+
+
 
 .home-hero {
+
   position: relative;
+
   z-index: 1;
+
   width: 100%;
+
   max-width: 850px;
+
   margin: 0 auto;
+
   padding: 58px 24px 100px;
+
 }
+
+
 
 .home-eyebrow {
+
   display: inline-block;
+
   color: var(--toca-violet);
+
   font-size: 0.76rem;
+
   font-weight: 700;
+
   letter-spacing: 0.13em;
+
   line-height: 1.5;
+
 }
+
+
 
 .home-hero h1 {
+
   margin: 22px 0 0;
+
   font-size: clamp(2.7rem, 7vw, 5.5rem);
+
   line-height: 1.04;
+
   letter-spacing: -0.065em;
+
   font-weight: 700;
+
 }
+
+
 
 .home-desktop-break {
+
   display: none;
+
 }
+
+
 
 .home-hero-description {
+
   max-width: 650px;
+
   margin: 26px auto 0;
+
   color: var(--toca-gray);
+
   font-size: clamp(1rem, 2vw, 1.18rem);
+
   line-height: 1.8;
+
 }
+
+
 
 .home-hero-highlight {
+
   width: fit-content;
+
   max-width: 100%;
+
   margin: 30px auto 0;
+
   padding: 12px 18px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   gap: 10px;
+
   border: 1px solid rgba(99, 102, 241, 0.16);
+
   border-radius: 100px;
+
   background: rgba(255, 255, 255, 0.65);
+
   color: #4338ca;
+
   font-size: 0.86rem;
+
   font-weight: 600;
+
 }
+
+
 
 .home-highlight-dot {
+
   width: 8px;
+
   height: 8px;
+
   flex-shrink: 0;
+
   border-radius: 50%;
+
   background: var(--toca-violet);
+
 }
 
+
+
 /* =========================
+
    PRODUCTO
+
    ========================= */
+
+
 
 .home-product {
+
   position: relative;
+
   z-index: 1;
+
   width: calc(100% + 48px);
+
   padding: 88px 24px 100px;
+
   background: rgba(255, 255, 255, 0.62);
+
   border-top: 1px solid rgba(99, 102, 241, 0.08);
+
   border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+
 }
+
+
 
 .home-section-heading {
+
   max-width: 680px;
+
   margin: 0 auto;
+
 }
+
+
 
 .home-section-heading h2,
+
 .home-benefits h2,
+
 .home-future h2 {
+
   margin: 16px 0 0;
+
   font-size: clamp(1.9rem, 4vw, 3rem);
+
   line-height: 1.15;
+
   letter-spacing: -0.045em;
+
   font-weight: 700;
+
 }
+
+
 
 .home-section-heading p,
+
 .home-benefits-content > p,
+
 .home-future > p {
+
   margin: 20px auto 0;
+
   color: var(--toca-gray);
+
   font-size: 1rem;
+
   line-height: 1.8;
+
 }
+
+
 
 .home-steps {
+
   width: 100%;
+
   max-width: 1050px;
+
   margin: 54px auto 0;
+
   display: grid;
+
   grid-template-columns: repeat(3, minmax(0, 1fr));
+
   gap: 22px;
+
 }
+
+
 
 .home-step {
+
   position: relative;
+
   padding: 32px 26px;
+
   border: 1px solid rgba(99, 102, 241, 0.12);
+
   border-radius: 24px;
+
   background: rgba(255, 255, 255, 0.82);
+
   text-align: left;
+
   box-shadow: 0 12px 40px rgba(39, 39, 80, 0.035);
+
 }
+
+
 
 .home-step-number {
+
   color: rgba(99, 102, 241, 0.6);
+
   font-size: 0.78rem;
+
   font-weight: 700;
+
   letter-spacing: 0.1em;
+
 }
+
+
 
 .home-step-icon {
+
   width: 58px;
+
   height: 58px;
+
   margin-top: 24px;
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
+
   border-radius: 17px;
+
   background: rgba(99, 102, 241, 0.09);
+
   color: var(--toca-violet);
+
 }
+
+
 
 .home-step-icon svg {
+
   width: 32px;
+
   height: 32px;
+
 }
+
+
 
 .home-step h3 {
+
   margin: 24px 0 0;
+
   font-size: 1.25rem;
+
   line-height: 1.3;
+
   font-weight: 700;
+
 }
+
+
 
 .home-step p {
+
   margin: 10px 0 0;
+
   color: var(--toca-gray);
+
   font-size: 0.94rem;
+
   line-height: 1.7;
+
 }
 
+
+
 /* =========================
+
    BENEFICIOS
+
    ========================= */
+
+
 
 .home-benefits {
+
   position: relative;
+
   z-index: 1;
+
   width: 100%;
+
   max-width: 1080px;
+
   padding: 110px 0;
+
   display: grid;
+
   grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+
   align-items: center;
+
   gap: 70px;
+
   text-align: left;
+
 }
+
+
 
 .home-benefits-content > p {
+
   margin-left: 0;
+
   margin-right: 0;
+
 }
+
+
 
 .home-benefit-list {
+
   margin: 30px 0 0;
+
   padding: 0;
+
   display: flex;
+
   flex-direction: column;
+
   gap: 17px;
+
   list-style: none;
+
 }
+
+
 
 .home-benefit-list li {
+
   display: flex;
+
   align-items: flex-start;
+
   gap: 12px;
+
   font-size: 0.95rem;
+
   line-height: 1.6;
+
 }
+
+
 
 .home-check {
+
   width: 23px;
+
   height: 23px;
+
   flex-shrink: 0;
+
   display: inline-flex;
+
   align-items: center;
+
   justify-content: center;
+
   border-radius: 50%;
+
   background: rgba(99, 102, 241, 0.12);
+
   color: var(--toca-violet);
+
   font-size: 0.85rem;
+
   font-weight: 700;
+
 }
 
+
+
 /* =========================
+
    ILUSTRACIÓN MÓVIL + NFC
+
    ========================= */
+
+
 
 .home-benefits-illustration {
+
   position: relative;
+
   min-height: 390px;
+
   overflow: hidden;
+
   border: 1px solid rgba(99, 102, 241, 0.15);
+
   border-radius: 30px;
+
   background: #ffffff;
+
   box-shadow: 0 24px 70px rgba(75, 70, 150, 0.11);
+
 }
+
+
 
 .home-phone {
+
   position: absolute;
+
   z-index: 3;
+
   left: 48px;
+
   top: 76px;
+
   width: 150px;
+
   height: 270px;
+
   padding: 7px;
+
   border: 3px solid #252525;
+
   border-radius: 25px;
+
   background: #252525;
+
   transform: rotate(-8deg);
+
   box-shadow: 0 22px 45px rgba(35, 35, 60, 0.18);
+
 }
+
+
 
 .home-phone::before {
+
   content: "";
+
   position: absolute;
+
   left: 50%;
+
   top: 6px;
+
   width: 52px;
+
   height: 5px;
+
   transform: translateX(-50%);
+
   border-radius: 20px;
+
   background: #111111;
+
 }
 
+
+
 .home-phone-screen {
+
   width: 100%;
+
   height: 100%;
+
   padding: 28px 10px 12px;
+
   overflow: hidden;
+
   border-radius: 18px;
+
+  background: #ffffff;
+
+}
+
+
+
+.home-phone-top {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  color: var(--toca-violet);
+
+  font-size: 0.58rem;
+
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+
+}
+
+
+
+.home-phone-status {
+
+  font-size: 0.45rem;
+
+}
+
+
+
+.home-phone-logo {
+
+  width: 42px;
+
+  height: auto;
+
+  object-fit: contain;
+
+}
+
+
+
+.home-phone-business {
+
+  margin-top: 23px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+}
+
+
+
+.home-phone-avatar {
+
+  width: 30px;
+
+  height: 30px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: rgba(99, 102, 241, 0.12);
+
+  color: var(--toca-violet);
+
+  font-size: 0.72rem;
+
+  font-weight: 700;
+
+}
+
+
+
+.home-phone-business div:last-child {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 2px;
+
+}
+
+
+
+.home-phone-business strong {
+
+  font-size: 0.6rem;
+
+}
+
+
+
+.home-phone-business span {
+
+  color: var(--toca-gray);
+
+  font-size: 0.48rem;
+
+}
+
+
+
+.home-phone-review {
+
+  margin-top: 22px;
+
+  padding: 12px 9px;
+
+  border-radius: 12px;
+
+  background: #f5f5ff;
+
+}
+
+
+
+.home-review-stars {
+
+  color: #f59e0b;
+
+  font-size: 0.55rem;
+
+  letter-spacing: 0.03em;
+
+}
+
+
+
+.home-phone-review strong {
+
+  display: block;
+
+  margin-top: 7px;
+
+  font-size: 0.58rem;
+
+}
+
+
+
+.home-phone-review span {
+
+  display: block;
+
+  margin-top: 4px;
+
+  color: var(--toca-gray);
+
+  font-size: 0.43rem;
+
+  line-height: 1.4;
+
+}
+
+
+
+.home-phone-button {
+
+  margin-top: 15px;
+
+  padding: 8px 9px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  border-radius: 9px;
+
+  background: var(--toca-violet);
+
+  color: white;
+
+  font-size: 0.48rem;
+
+  font-weight: 700;
+
+}
+
+
+
+.home-nfc-connection {
+
+  position: absolute;
+
+  z-index: 2;
+
+  left: 185px;
+
+  top: 145px;
+
+  width: 85px;
+
+  height: 95px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+}
+
+
+
+.home-nfc-connection span {
+
+  position: absolute;
+
+  border: 2px solid var(--toca-violet);
+
+  border-left-color: transparent;
+
+  border-bottom-color: transparent;
+
+  border-radius: 50%;
+
+  transform: rotate(45deg);
+
+}
+
+
+
+.home-nfc-connection span:nth-child(1) {
+
+  width: 28px;
+
+  height: 28px;
+
+}
+
+
+
+.home-nfc-connection span:nth-child(2) {
+
+  width: 52px;
+
+  height: 52px;
+
+  opacity: 0.7;
+
+}
+
+
+
+.home-nfc-connection span:nth-child(3) {
+
+  width: 78px;
+
+  height: 78px;
+
+  opacity: 0.35;
+
+}
+
+
+
+.home-nfc-stand {
+
+  position: absolute;
+
+  z-index: 3;
+
+  right: 55px;
+
+  bottom: 42px;
+
+  width: 125px;
+
+  height: 175px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 1px solid rgba(99, 102, 241, 0.2);
+
+  border-radius: 18px 18px 12px 12px;
+
+  background: linear-gradient(
+
+    160deg,
+
+    #ffffff 0%,
+
+    #e8e7ff 100%
+
+  );
+
+  box-shadow: 0 18px 38px rgba(75, 70, 150, 0.15);
+
+  transform: perspective(500px) rotateY(-8deg);
+
+}
+
+
+
+.home-nfc-stand::before {
+
+  content: "";
+
+  position: absolute;
+
+  top: 18px;
+
+  width: 78px;
+
+  height: 105px;
+
+  border: 1px solid rgba(99, 102, 241, 0.14);
+
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.72);
+
+}
+
+
+
+.home-nfc-stand-logo {
+
+  position: relative;
+
+  z-index: 1;
+
+  margin-top: -25px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+}
+
+
+
+.home-nfc-stand-logo img {
+
+  width: 58px;
+
+  height: auto;
+
+}
+
+
+
+.home-nfc-symbol {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: 42px;
+
+  height: 42px;
+
+  margin-top: 17px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+}
+
+
+
+.home-nfc-symbol span {
+
+  position: absolute;
+
+  border: 2px solid var(--toca-violet);
+
+  border-left-color: transparent;
+
+  border-bottom-color: transparent;
+
+  border-radius: 50%;
+
+  transform: rotate(45deg);
+
+}
+
+
+
+.home-nfc-symbol span:nth-child(1) {
+
+  width: 14px;
+
+  height: 14px;
+
+}
+
+
+
+.home-nfc-symbol span:nth-child(2) {
+
+  width: 25px;
+
+  height: 25px;
+
+  opacity: 0.7;
+
+}
+
+
+
+.home-nfc-symbol span:nth-child(3) {
+
+  width: 36px;
+
+  height: 36px;
+
+  opacity: 0.35;
+
+}
+
+
+
+.home-nfc-stand-base {
+
+  position: absolute;
+
+  bottom: -10px;
+
+  left: 50%;
+
+  width: 155px;
+
+  height: 18px;
+
+  transform: translateX(-50%);
+
+  border-radius: 50%;
+
+  background: rgba(99, 102, 241, 0.18);
+
+  filter: blur(4px);
+
+}
+
+
+
+/* =========================
+
+   VISIÓN DE TOCA
+
+   ========================= */
+
+
+
+.home-future {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: calc(100% + 48px);
+
+  padding: 82px 24px 90px;
+
+  background: rgba(255, 255, 255, 0.55);
+
+  border-top: 1px solid rgba(99, 102, 241, 0.08);
+
+  text-align: center;
+
+}
+
+
+
+.home-future h2 {
+
+  max-width: 700px;
+
+  margin-left: auto;
+
+  margin-right: auto;
+
+}
+
+
+
+.home-future > p {
+
+  max-width: 650px;
+
+}
+
+
+
+/* =========================
+
+   FOOTER
+
+   ========================= */
+
+
+
+.home-footer {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+
+  padding: 36px 0 28px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  gap: 8px;
+
+  text-align: center;
+
+}
+
+
+
+.home-footer-logo {
+
+  width: 85px;
+
+  height: auto;
+
+}
+
+
+
+.home-footer p {
+
+  margin: 0;
+
+  color: var(--toca-gray);
+
+  font-size: 0.78rem;
+
+}
+
+
+
+.home-footer > span {
+
+  margin-top: 8px;
+
+  color: #9ca3af;
+
+  font-size: 0.7rem;
+
+}
+
+
+
+/* =========================
+
+   ESCRITORIO
+
+   ========================= */
+
+
+
+@media (min-width: 768px) {
+
+  .toca-header {
+
+    justify-content: flex-start;
+
+    padding: 34px 48px;
+
+  }
+
+
+
+  .toca-main {
+
+    padding: 20px 48px 50px;
+
+  }
+
+
+
+  .toca-header img {
+
+    width: 115px;
+
+  }
+
+
+
+  .business-description {
+
+    font-size: 1.05rem;
+
+  }
+
+
+
+  .nfc-decoration {
+
+    width: 620px;
+
+    height: 620px;
+
+  }
+
+
+
+  .nfc-decoration-left {
+
+    left: -150px;
+
+    bottom: -150px;
+
+  }
+
+
+
+  .nfc-decoration-right {
+
+    right: -150px;
+
+    top: -150px;
+
+  }
+
+
+
+  .home {
+
+    padding: 0 48px;
+
+  }
+
+
+
+  .home-intro {
+
+    width: calc(100% + 96px);
+
+  }
+
+
+
+  .home-header {
+
+    justify-content: center;
+
+    padding: 34px 48px;
+
+  }
+
+
+
+  .home-logo {
+
+    width: 190px;
+
+  }
+
+
+
+  .home-hero {
+
+    padding: 80px 48px 125px;
+
+  }
+
+
+
+  .home-desktop-break {
+
+    display: block;
+
+  }
+
+
+
+  .home-nfc-waves {
+
+    width: 360px;
+
+    height: 360px;
+
+  }
+
+
+
+  .home-nfc-waves-top-right {
+
+    top: -90px;
+
+    right: -90px;
+
+    transform: rotate(270deg);
+
+  }
+
+
+
+  .home-nfc-waves-bottom-left {
+
+    bottom: -90px;
+
+    left: -114px;
+
+    transform: rotate(90deg);
+
+  }
+
+
+
+  .home-product,
+
+  .home-future {
+
+    width: calc(100% + 96px);
+
+    padding-left: 48px;
+
+    padding-right: 48px;
+
+  }
+
+
+
+  .home-benefits-illustration {
+
+    min-height: 410px;
+
+  }
+
+}
+
+
+
+/* =========================
+
+   MÓVIL
+
+   ========================= */
+
+
+
+@media (max-width: 767px) {
+
+  .home {
+
+    padding: 0 24px;
+
+  }
+
+
+
+  .home-intro {
+
+    width: calc(100% + 48px);
+
+  }
+
+
+
+  .home-header {
+
+    padding: 26px 24px 20px;
+
+  }
+
+
+
+  .home-logo {
+
+    width: 155px;
+
+  }
+
+
+
+  .home-nfc-waves {
+
+    width: 205px;
+
+    height: 205px;
+
+    color: rgba(99, 102, 241, 0.08);
+
+  }
+
+
+
+  .home-nfc-waves-top-right {
+
+    top: -52px;
+
+    right: -52px;
+
+    transform: rotate(270deg);
+
+  }
+
+
+
+  .home-nfc-waves-bottom-left {
+
+    bottom: -52px;
+
+    left: -64px;
+
+    transform: rotate(90deg);
+
+  }
+
+
+
+  .home-hero {
+
+    padding: 50px 24px 72px;
+
+  }
+
+
+
+  .home-hero h1 {
+
+    font-size: clamp(2.45rem, 11vw, 3.5rem);
+
+  }
+
+
+
+  .home-desktop-break {
+
+    display: none;
+
+  }
+
+
+
+  .home-hero-description {
+
+    font-size: 0.98rem;
+
+    line-height: 1.75;
+
+  }
+
+
+
+  .home-hero-highlight {
+
+    font-size: 0.76rem;
+
+    padding: 11px 14px;
+
+  }
+
+
+
+  .home-product {
+
+    padding: 68px 24px 72px;
+
+  }
+
+
+
+  .home-section-heading h2,
+
+  .home-benefits h2,
+
+  .home-future h2 {
+
+    font-size: clamp(1.85rem, 8vw, 2.5rem);
+
+  }
+
+
+
+  .home-steps {
+
+    max-width: 430px;
+
+    margin-top: 36px;
+
+    grid-template-columns: 1fr;
+
+    gap: 14px;
+
+  }
+
+
+
+  .home-step {
+
+    padding: 25px;
+
+    display: grid;
+
+    grid-template-columns: 58px minmax(0, 1fr);
+
+    column-gap: 18px;
+
+    align-items: center;
+
+  }
+
+
+
+  .home-step-number {
+
+    grid-column: 1 / -1;
+
+  }
+
+
+
+  .home-step-icon {
+
+    grid-column: 1;
+
+    grid-row: 2 / 4;
+
+    margin-top: 18px;
+
+  }
+
+
+
+  .home-step h3 {
+
+    grid-column: 2;
+
+    margin: 18px 0 0;
+
+  }
+
+
+
+  .home-step p {
+
+    grid-column: 2;
+
+    margin-top: 6px;
+
+  }
+
+
+
+  .home-benefits {
+
+    padding: 76px 0;
+
+    grid-template-columns: 1fr;
+
+    gap: 42px;
+
+  }
+
+
+
+  .home-benefits-illustration {
+
+    min-height: 340px;
+
+  }
+
+
+
+  .home-phone {
+
+    left: 24px;
+
+    top: 62px;
+
+    width: 125px;
+
+    height: 225px;
+
+  }
+
+
+
+  .home-phone-screen {
+
+    padding-top: 25px;
+
+  }
+
+
+
+  .home-phone-business {
+
+    margin-top: 17px;
+
+  }
+
+
+
+  .home-phone-review {
+
+    margin-top: 16px;
+
+  }
+
+
+
+  .home-nfc-connection {
+
+    left: 135px;
+
+    top: 118px;
+
+    width: 70px;
+
+    height: 80px;
+
+  }
+
+
+
+  .home-nfc-stand {
+
+    right: 25px;
+
+    bottom: 30px;
+
+    width: 105px;
+
+    height: 150px;
+
+  }
+
+
+
+  .home-nfc-stand::before {
+
+    width: 66px;
+
+    height: 88px;
+
+  }
+
+
+
+  .home-nfc-symbol {
+
+    margin-top: 14px;
+
+    transform: scale(0.9);
+
+  }
+
+
+
+  .home-future {
+
+    padding: 68px 24px 72px;
+
+  }
+
+}
+
+
+
+/* =========================
+
+   QUÉ ES TOCA
+
+   ========================= */
+
+
+
+.home-about {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+
+  max-width: 1080px;
+
+  padding: 100px 0 110px;
+
+  text-align: center;
+
+}
+
+
+
+.home-about-card {
+
+  max-width: 760px;
+
+  margin: 52px auto 0;
+
+  padding: 32px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 24px;
+
+  border: 1px solid rgba(99, 102, 241, 0.12);
+
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.72);
+
+  box-shadow: 0 18px 50px rgba(39, 39, 80, 0.045);
+
+  text-align: left;
+
+}
+
+
+
+.home-about-icon {
+
+  width: 62px;
+
+  height: 62px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: rgba(99, 102, 241, 0.09);
+
+  color: var(--toca-violet);
+
+}
+
+
+
+.home-about-icon svg {
+
+  width: 34px;
+
+  height: 34px;
+
+}
+
+
+
+.home-about-card h3 {
+
+  margin: 0;
+
+  font-size: 1.2rem;
+
+  line-height: 1.35;
+
+}
+
+
+
+.home-about-card p {
+
+  margin: 8px 0 0;
+
+  color: var(--toca-gray);
+
+  font-size: 0.94rem;
+
+  line-height: 1.7;
+
+}
+
+
+
+
+
+/* =========================
+
+   FUTURAS FUNCIONES
+
+   ========================= */
+
+
+
+.home-future-features {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: calc(100% + 48px);
+
+  padding: 100px 24px 110px;
+
+  background: rgba(255, 255, 255, 0.48);
+
+  border-top: 1px solid rgba(99, 102, 241, 0.08);
+
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+
+  text-align: center;
+
+}
+
+
+
+.home-feature-grid {
+
+  width: 100%;
+
+  max-width: 1050px;
+
+  margin: 54px auto 0;
+
+  display: grid;
+
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 16px;
+
+}
+
+
+
+.home-feature-card {
+
+  padding: 26px 22px;
+
+  border: 1px solid rgba(99, 102, 241, 0.11);
+
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.78);
+
+  text-align: left;
+
+  box-shadow: 0 12px 35px rgba(39, 39, 80, 0.03);
+
+}
+
+
+
+.home-feature-icon {
+
+  width: 40px;
+
+  height: 40px;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 12px;
+
+  background: rgba(99, 102, 241, 0.09);
+
+  color: var(--toca-violet);
+
+  font-size: 1rem;
+
+  font-weight: 700;
+
+}
+
+
+
+.home-feature-card h3 {
+
+  margin: 18px 0 0;
+
+  font-size: 1rem;
+
+}
+
+
+
+.home-feature-card p {
+
+  margin: 7px 0 0;
+
+  color: var(--toca-gray);
+
+  font-size: 0.84rem;
+
+  line-height: 1.6;
+
+}
+
+
+
+
+
+/* =========================
+
+   PREGUNTAS FRECUENTES
+
+   ========================= */
+
+
+
+.home-faq {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: 100%;
+
+  max-width: 850px;
+
+  padding: 105px 0;
+
+  text-align: center;
+
+}
+
+
+
+.home-faq-list {
+
+  margin-top: 48px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  text-align: left;
+
+}
+
+
+
+.home-faq-list details {
+
+  border: 1px solid rgba(99, 102, 241, 0.11);
+
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.72);
+
+  overflow: hidden;
+
+}
+
+
+
+.home-faq-list summary {
+
+  padding: 22px 24px;
+
+  cursor: pointer;
+
+  list-style: none;
+
+  font-size: 0.96rem;
+
+  font-weight: 600;
+
+}
+
+
+
+.home-faq-list summary::-webkit-details-marker {
+
+  display: none;
+
+}
+
+
+
+.home-faq-list summary::after {
+
+  content: "+";
+
+  float: right;
+
+  color: var(--toca-violet);
+
+  font-size: 1.2rem;
+
+  font-weight: 500;
+
+}
+
+
+
+.home-faq-list details[open] summary::after {
+
+  content: "−";
+
+}
+
+
+
+.home-faq-list details p {
+
+  margin: -4px 24px 22px;
+
+  color: var(--toca-gray);
+
+  font-size: 0.9rem;
+
+  line-height: 1.7;
+
+}
+
+
+
+
+
+/* =========================
+
+   CONTACTO
+
+   ========================= */
+
+
+
+.home-contact {
+
+  position: relative;
+
+  z-index: 1;
+
+  width: calc(100% + 48px);
+
+  padding: 100px 24px 105px;
+
+  background: rgba(255, 255, 255, 0.58);
+
+  border-top: 1px solid rgba(99, 102, 241, 0.08);
+
+  text-align: center;
+
+}
+
+
+
+.home-contact > p {
+
+  max-width: 610px;
+
+  margin: 20px auto 0;
+
+  color: var(--toca-gray);
+
+  font-size: 1rem;
+
+  line-height: 1.8;
+
+}
+
+
+
+.home-contact-links {
+
+  width: 100%;
+
+  max-width: 850px;
+
+  margin: 48px auto 0;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 14px;
+
+}
+
+
+
+.home-contact-card {
+
+  padding: 22px;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  border: 1px solid rgba(99, 102, 241, 0.12);
+
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.82);
+
+  text-align: left;
+
+  transition:
+
+    transform 0.15s ease,
+
+    box-shadow 0.15s ease;
+
+}
+
+
+
+.home-contact-card:hover {
+
+  transform: translateY(-2px);
+
+  box-shadow: 0 14px 35px rgba(39, 39, 80, 0.06);
+
+}
+
+
+
+.home-contact-icon {
+
+  width: 42px;
+
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border-radius: 13px;
+
+  background: rgba(99, 102, 241, 0.09);
+
+  color: var(--toca-violet);
+
+}
+
+
+
+.home-contact-icon svg {
+
+  width: 21px;
+
+  height: 21px;
+
+}
+
+
+
+.home-contact-card span:last-child {
+
+  min-width: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 4px;
+
+}
+
+
+
+.home-contact-card strong {
+
+  font-size: 0.9rem;
+
+}
+
+
+
+.home-contact-card small {
+
+  color: var(--toca-gray);
+
+  font-size: 0.75rem;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+
+
+
+/* =========================
+
+   REDES DEL FOOTER
+
+   ========================= */
+
+
+
+.home-footer-socials {
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  margin-top: 6px;
+
+}
+
+
+
+.home-footer-socials a {
+
+  width: 34px;
+
+  height: 34px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  border: 1px solid rgba(99, 102, 241, 0.12);
+
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.62);
+
+  color: var(--toca-gray);
+
+  transition:
+
+    color 0.15s ease,
+
+    transform 0.15s ease;
+
+}
+
+
+
+.home-footer-socials a:hover {
+
+  color: var(--toca-violet);
+
+  transform: translateY(-1px);
+
+}
+
+
+
+.home-footer-socials svg {
+
+  width: 17px;
+
+  height: 17px;
+
+}
+
+
+
+
+
+/* =========================
+
+   RESPONSIVE — NUEVAS SECCIONES
+
+   ========================= */
+
+
+
+@media (min-width: 768px) {
+
+  .home-future-features,
+
+  .home-contact {
+
+    width: calc(100% + 96px);
+
+    padding-left: 48px;
+
+    padding-right: 48px;
+
+  }
+
+}
+
+
+
+@media (max-width: 767px) {
+
+  .home-about {
+
+    padding: 76px 0 82px;
+
+  }
+
+
+
+  .home-about-card {
+
+    margin-top: 36px;
+
+    padding: 24px;
+
+    flex-direction: column;
+
+    align-items: flex-start;
+
+    gap: 18px;
+
+  }
+
+
+
+  .home-about-icon {
+
+    width: 56px;
+
+    height: 56px;
+
+  }
+
+
+
+  .home-about-card h3 {
+
+    font-size: 1.05rem;
+
+  }
+
+
+
+  .home-about-card p {
+
+    font-size: 0.88rem;
+
+  }
+
+
+
+  .home-future-features {
+
+    padding: 76px 24px 82px;
+
+  }
+
+
+
+  .home-feature-grid {
+
+    margin-top: 36px;
+
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    gap: 12px;
+
+  }
+
+
+
+  .home-feature-card {
+
+    padding: 21px 18px;
+
+  }
+
+
+
+  .home-feature-card h3 {
+
+    font-size: 0.92rem;
+
+  }
+
+
+
+  .home-feature-card p {
+
+    font-size: 0.78rem;
+
+  }
+
+
+
+  .home-faq {
+
+    padding: 78px 0;
+
+  }
+
+
+
+  .home-faq-list {
+
+    margin-top: 36px;
+
+  }
+
+
+
+  .home-faq-list summary {
+
+    padding: 19px 20px;
+
+    font-size: 0.88rem;
+
+  }
+
+
+
+  .home-faq-list details p {
+
+    margin-left: 20px;
+
+    margin-right: 20px;
+
+    font-size: 0.84rem;
+
+  }
+
+
+
+  .home-contact {
+
+    padding: 78px 24px 82px;
+
+  }
+
+
+
+  .home-contact > p {
+
+    font-size: 0.9rem;
+
+  }
+
+
+
+  .home-contact-links {
+
+    margin-top: 36px;
+
+    grid-template-columns: 1fr;
+
+    gap: 10px;
+
+  }
+
+
+
+  .home-contact-card {
+
+    padding: 18px;
+
+  }
+
+}
+
+
+
+/* =========================
+
+   ACCESIBILIDAD
+
+   ========================= */
+
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+
+  *::before,
+
+  *::after {
+
+    scroll-behavior: auto !important;
+
+    transition-duration: 0.01ms !important;
+
+  }
+
+}
+
+/* Ajustes visuales de la portada TOCA */
+.home-about {
+  background: #ffffff;
+  box-shadow: 0 0 0 100vmax #ffffff;
+  clip-path: inset(0 -100vmax);
+}
+
+.home-product {
+  background: #f7f7ff;
+}
+
+.home-future-features {
   background: #ffffff;
 }
 
-.home-phone-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--toca-violet);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+.home-benefits {
+  background: #f7f7ff;
+  box-shadow: 0 0 0 100vmax #f7f7ff;
+  clip-path: inset(0 -100vmax);
 }
-
-.home-phone-status {
-  font-size: 0.45rem;
-}
-
-.home-phone-logo {
-  width: 42px;
-  height: auto;
-  object-fit: contain;
-}
-
-.home-phone-business {
-  margin-top: 23px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.home-phone-avatar {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9px;
-  background: rgba(99, 102, 241, 0.12);
-  color: var(--toca-violet);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.home-phone-business div:last-child {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.home-phone-business strong {
-  font-size: 0.6rem;
-}
-
-.home-phone-business span {
-  color: var(--toca-gray);
-  font-size: 0.48rem;
-}
-
-.home-phone-review {
-  margin-top: 22px;
-  padding: 12px 9px;
-  border-radius: 12px;
-  background: #f5f5ff;
-}
-
-.home-review-stars {
-  color: #f59e0b;
-  font-size: 0.55rem;
-  letter-spacing: 0.03em;
-}
-
-.home-phone-review strong {
-  display: block;
-  margin-top: 7px;
-  font-size: 0.58rem;
-}
-
-.home-phone-review span {
-  display: block;
-  margin-top: 4px;
-  color: var(--toca-gray);
-  font-size: 0.43rem;
-  line-height: 1.4;
-}
-
-.home-phone-button {
-  margin-top: 15px;
-  padding: 8px 9px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-radius: 9px;
-  background: var(--toca-violet);
-  color: white;
-  font-size: 0.48rem;
-  font-weight: 700;
-}
-
-.home-nfc-connection {
-  position: absolute;
-  z-index: 2;
-  left: 185px;
-  top: 145px;
-  width: 85px;
-  height: 95px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.home-nfc-connection span {
-  position: absolute;
-  border: 2px solid var(--toca-violet);
-  border-left-color: transparent;
-  border-bottom-color: transparent;
-  border-radius: 50%;
-  transform: rotate(45deg);
-}
-
-.home-nfc-connection span:nth-child(1) {
-  width: 28px;
-  height: 28px;
-}
-
-.home-nfc-connection span:nth-child(2) {
-  width: 52px;
-  height: 52px;
-  opacity: 0.7;
-}
-
-.home-nfc-connection span:nth-child(3) {
-  width: 78px;
-  height: 78px;
-  opacity: 0.35;
-}
-
-.home-nfc-stand {
-  position: absolute;
-  z-index: 3;
-  right: 55px;
-  bottom: 42px;
-  width: 125px;
-  height: 175px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 18px 18px 12px 12px;
-  background: linear-gradient(
-    160deg,
-    #ffffff 0%,
-    #e8e7ff 100%
-  );
-  box-shadow: 0 18px 38px rgba(75, 70, 150, 0.15);
-  transform: perspective(500px) rotateY(-8deg);
-}
-
-.home-nfc-stand::before {
-  content: "";
-  position: absolute;
-  top: 18px;
-  width: 78px;
-  height: 105px;
-  border: 1px solid rgba(99, 102, 241, 0.14);
-  border-radius: 13px;
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.home-nfc-stand-logo {
-  position: relative;
-  z-index: 1;
-  margin-top: -25px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.home-nfc-stand-logo img {
-  width: 58px;
-  height: auto;
-}
-
-.home-nfc-symbol {
-  position: relative;
-  z-index: 1;
-  width: 42px;
-  height: 42px;
-  margin-top: 17px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.home-nfc-symbol span {
-  position: absolute;
-  border: 2px solid var(--toca-violet);
-  border-left-color: transparent;
-  border-bottom-color: transparent;
-  border-radius: 50%;
-  transform: rotate(45deg);
-}
-
-.home-nfc-symbol span:nth-child(1) {
-  width: 14px;
-  height: 14px;
-}
-
-.home-nfc-symbol span:nth-child(2) {
-  width: 25px;
-  height: 25px;
-  opacity: 0.7;
-}
-
-.home-nfc-symbol span:nth-child(3) {
-  width: 36px;
-  height: 36px;
-  opacity: 0.35;
-}
-
-.home-nfc-stand-base {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  width: 155px;
-  height: 18px;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: rgba(99, 102, 241, 0.18);
-  filter: blur(4px);
-}
-
-/* =========================
-   VISIÓN DE TOCA
-   ========================= */
 
 .home-future {
-  position: relative;
-  z-index: 1;
-  width: calc(100% + 48px);
-  padding: 82px 24px 90px;
-  background: rgba(255, 255, 255, 0.55);
-  border-top: 1px solid rgba(99, 102, 241, 0.08);
-  text-align: center;
+  background: #ffffff;
 }
 
-.home-future h2 {
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
+.home-faq {
+  background: #f7f7ff;
+  box-shadow: 0 0 0 100vmax #f7f7ff;
+  clip-path: inset(0 -100vmax);
 }
 
-.home-future > p {
-  max-width: 650px;
+.home-contact {
+  background: #ffffff;
 }
 
-/* =========================
-   FOOTER
-   ========================= */
-
-.home-footer {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  padding: 36px 0 28px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
+.home-feature-icon svg {
+  width: 27px;
+  height: 27px;
+  display: block;
 }
 
-.home-footer-logo {
-  width: 85px;
-  height: auto;
+.home-step-icon-approach svg {
+  width: 38px;
+  height: 38px;
 }
 
-.home-footer p {
-  margin: 0;
-  color: var(--toca-gray);
-  font-size: 0.78rem;
+.home-about-card {
+  gap: 0;
 }
-
-.home-footer > span {
-  margin-top: 8px;
-  color: #9ca3af;
-  font-size: 0.7rem;
-}
-
-/* =========================
-   ESCRITORIO
-   ========================= */
-
-@media (min-width: 768px) {
-  .toca-header {
-    justify-content: flex-start;
-    padding: 34px 48px;
-  }
-
-  .toca-main {
-    padding: 20px 48px 50px;
-  }
-
-  .toca-header img {
-    width: 115px;
-  }
-
-  .business-description {
-    font-size: 1.05rem;
-  }
-
-  .nfc-decoration {
-    width: 620px;
-    height: 620px;
-  }
-
-  .nfc-decoration-left {
-    left: -150px;
-    bottom: -150px;
-  }
-
-  .nfc-decoration-right {
-    right: -150px;
-    top: -150px;
-  }
-
-  .home {
-    padding: 0 48px;
-  }
-
-  .home-intro {
-    width: calc(100% + 96px);
-  }
-
-  .home-header {
-    justify-content: center;
-    padding: 34px 48px;
-  }
-
-  .home-logo {
-    width: 190px;
-  }
-
-  .home-hero {
-    padding: 80px 48px 125px;
-  }
-
-  .home-desktop-break {
-    display: block;
-  }
-
-  .home-nfc-waves {
-    width: 360px;
-    height: 360px;
-  }
-
-  .home-nfc-waves-top-right {
-    top: -90px;
-    right: -90px;
-    transform: rotate(270deg);
-  }
-
-  .home-nfc-waves-bottom-left {
-    bottom: -90px;
-    left: -114px;
-    transform: rotate(90deg);
-  }
-
-  .home-product,
-  .home-future {
-    width: calc(100% + 96px);
-    padding-left: 48px;
-    padding-right: 48px;
-  }
-
-  .home-benefits-illustration {
-    min-height: 410px;
-  }
-}
-
-/* =========================
-   MÓVIL
-   ========================= */
 
 @media (max-width: 767px) {
-  .home {
-    padding: 0 24px;
-  }
-
-  .home-intro {
-    width: calc(100% + 48px);
-  }
-
-  .home-header {
-    padding: 26px 24px 20px;
-  }
-
-  .home-logo {
-    width: 155px;
-  }
-
-  .home-nfc-waves {
-    width: 205px;
-    height: 205px;
-    color: rgba(99, 102, 241, 0.08);
-  }
-
-  .home-nfc-waves-top-right {
-    top: -52px;
-    right: -52px;
-    transform: rotate(270deg);
-  }
-
-  .home-nfc-waves-bottom-left {
-    bottom: -52px;
-    left: -64px;
-    transform: rotate(90deg);
-  }
-
-  .home-hero {
-    padding: 50px 24px 72px;
-  }
-
-  .home-hero h1 {
-    font-size: clamp(2.45rem, 11vw, 3.5rem);
-  }
-
-  .home-desktop-break {
-    display: none;
-  }
-
-  .home-hero-description {
-    font-size: 0.98rem;
-    line-height: 1.75;
-  }
-
-  .home-hero-highlight {
-    font-size: 0.76rem;
-    padding: 11px 14px;
-  }
-
-  .home-product {
-    padding: 68px 24px 72px;
-  }
-
-  .home-section-heading h2,
-  .home-benefits h2,
-  .home-future h2 {
-    font-size: clamp(1.85rem, 8vw, 2.5rem);
-  }
-
-  .home-steps {
-    max-width: 430px;
-    margin-top: 36px;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-
-  .home-step {
-    padding: 25px;
-    display: grid;
-    grid-template-columns: 58px minmax(0, 1fr);
-    column-gap: 18px;
-    align-items: center;
-  }
-
-  .home-step-number {
-    grid-column: 1 / -1;
-  }
-
-  .home-step-icon {
-    grid-column: 1;
-    grid-row: 2 / 4;
-    margin-top: 18px;
-  }
-
-  .home-step h3 {
-    grid-column: 2;
-    margin: 18px 0 0;
-  }
-
-  .home-step p {
-    grid-column: 2;
-    margin-top: 6px;
+  .home-about,
+  .home-benefits,
+  .home-faq {
+    box-shadow: 0 0 0 100vmax #ffffff;
+    clip-path: inset(0 -100vmax);
   }
 
   .home-benefits {
-    padding: 76px 0;
-    grid-template-columns: 1fr;
-    gap: 42px;
+    box-shadow: 0 0 0 100vmax #f7f7ff;
   }
 
-  .home-benefits-illustration {
-    min-height: 340px;
-  }
-
-  .home-phone {
-    left: 24px;
-    top: 62px;
-    width: 125px;
-    height: 225px;
-  }
-
-  .home-phone-screen {
-    padding-top: 25px;
-  }
-
-  .home-phone-business {
-    margin-top: 17px;
-  }
-
-  .home-phone-review {
-    margin-top: 16px;
-  }
-
-  .home-nfc-connection {
-    left: 135px;
-    top: 118px;
-    width: 70px;
-    height: 80px;
-  }
-
-  .home-nfc-stand {
-    right: 25px;
-    bottom: 30px;
-    width: 105px;
-    height: 150px;
-  }
-
-  .home-nfc-stand::before {
-    width: 66px;
-    height: 88px;
-  }
-
-  .home-nfc-symbol {
-    margin-top: 14px;
-    transform: scale(0.9);
-  }
-
-  .home-future {
-    padding: 68px 24px 72px;
-  }
-}
-
-/* =========================
-   ACCESIBILIDAD
-   ========================= */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
+  .home-faq {
+    box-shadow: 0 0 0 100vmax #f7f7ff;
   }
 }
