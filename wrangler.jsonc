@@ -1,26 +1,33 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "toca",
-  "compatibility_date": "2026-09-24",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "main": "vinext/server/fetch-handler",
-  "assets": {
-    "directory": "dist/client",
-    "not_found_handling": "none",
-    "binding": "ASSETS"
-  },
-  "version_metadata": {
-    "binding": "CF_VERSION_METADATA"
-  },
-    "cache": {
-    "enabled": false
-  },
-  "observability": {
-    "logs": {
-      "enabled": true,
-      "invocation_logs": true
-    }
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "toca",
+	"compatibility_date": "2026-09-24",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": "vinext/server/fetch-handler",
+	"assets": {
+		"directory": "dist/client",
+		"not_found_handling": "none",
+		"binding": "ASSETS"
+	},
+	"version_metadata": {
+		"binding": "CF_VERSION_METADATA"
+	},
+	"cache": {
+		"enabled": false
+	},
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		}
+	},
+	"d1_databases": [
+		{
+			"binding": "toca_analytics",
+			"database_name": "toca-analytics",
+			"database_id": "18cbb88d-5149-4c4b-94aa-f0807987a1cf"
+		}
+	]
 }

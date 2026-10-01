@@ -13,4 +13,10 @@ export const businesses: Business[] = [
     slug: "bar-pepe",
     googleReviewUrl: "https://www.google.com/",
   },
+  {
+    id: "cafeteria-lola",
+    name: "Cafetería Lola",
+    slug: "cafeteria-lola",
+    googleReviewUrl: "https://www.google.com/",
+  },
 ];

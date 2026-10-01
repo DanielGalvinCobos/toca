@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
+
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { getBusinessBySlug } from "@/lib/businesses";
 
 type PageProps = {
@@ -22,7 +24,6 @@ function NfcWaves({ className }: { className: string }) {
         strokeWidth="11"
         strokeLinecap="round"
       />
-
       <path
         d="M 0 175 A 225 225 0 0 1 225 400"
         fill="none"
@@ -30,7 +31,6 @@ function NfcWaves({ className }: { className: string }) {
         strokeWidth="11"
         strokeLinecap="round"
       />
-
       <path
         d="M 0 250 A 150 150 0 0 1 150 400"
         fill="none"
@@ -45,7 +45,7 @@ function NfcWaves({ className }: { className: string }) {
 export default async function BusinessPage({ params }: PageProps) {
   const { slug } = await params;
 
-  const business = getBusinessBySlug(slug);
+  const business = await getBusinessBySlug(slug);
 
   if (!business) {
     notFound();
@@ -77,9 +77,7 @@ export default async function BusinessPage({ params }: PageProps) {
           />
         )}
 
-        <h1 className="business-name">
-          {business.name}
-        </h1>
+        <h1 className="business-name">{business.name}</h1>
 
         <p className="business-description">
           Tu opinión nos ayuda a seguir mejorando.
@@ -90,6 +88,7 @@ export default async function BusinessPage({ params }: PageProps) {
           href={business.googleReviewUrl}
           target="_blank"
           rel="noopener noreferrer"
+          data-google-review
         >
           <span className="google-icon">
             <svg
@@ -136,6 +135,8 @@ export default async function BusinessPage({ params }: PageProps) {
           Todo tu negocio. En un toque.
         </p>
       </footer>
+
+      <AnalyticsTracker businessId={business.id} />
     </main>
   );
 }
