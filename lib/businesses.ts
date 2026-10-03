@@ -6,6 +6,7 @@ export type Business = {
   slug: string;
   googleReviewUrl: string;
   logoUrl?: string;
+  createdAt: string;
 };
 
 function mapBusiness(row: Record<string, unknown>): Business {
@@ -17,7 +18,17 @@ function mapBusiness(row: Record<string, unknown>): Business {
     logoUrl: row.logo_url
       ? String(row.logo_url)
       : undefined,
+    createdAt: String(row.created_at),
   };
+}
+
+function getMadridToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
 export async function getBusinessBySlug(
@@ -30,7 +41,8 @@ export async function getBusinessBySlug(
         name,
         slug,
         google_review_url,
-        logo_url
+        logo_url,
+        created_at
       FROM businesses
       WHERE slug = ?
       LIMIT 1
@@ -55,7 +67,8 @@ export async function getBusinessById(
         name,
         slug,
         google_review_url,
-        logo_url
+        logo_url,
+        created_at
       FROM businesses
       WHERE id = ?
       LIMIT 1
@@ -78,7 +91,8 @@ export async function getAllBusinesses(): Promise<Business[]> {
         name,
         slug,
         google_review_url,
-        logo_url
+        logo_url,
+        created_at
       FROM businesses
       ORDER BY name ASC
     `)
@@ -96,6 +110,7 @@ export async function createBusiness(data: {
   logoUrl?: string;
 }): Promise<Business> {
   const id = crypto.randomUUID();
+  const createdAt = getMadridToday();
 
   await env.toca_analytics
     .prepare(`
@@ -104,16 +119,18 @@ export async function createBusiness(data: {
         name,
         slug,
         google_review_url,
-        logo_url
+        logo_url,
+        created_at
       )
-      VALUES (?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?)
     `)
     .bind(
       id,
       data.name,
       data.slug,
       data.googleReviewUrl,
-      data.logoUrl || null
+      data.logoUrl || null,
+      createdAt
     )
     .run();
 
@@ -123,6 +140,7 @@ export async function createBusiness(data: {
     slug: data.slug,
     googleReviewUrl: data.googleReviewUrl,
     logoUrl: data.logoUrl || undefined,
+    createdAt,
   };
 }
 
@@ -147,7 +165,8 @@ export async function updateBusiness(data: {
         name,
         slug,
         google_review_url,
-        logo_url
+        logo_url,
+        created_at
     `)
     .bind(
       data.name,

@@ -13,6 +13,7 @@ type AnalyticsRow = {
 
 type AnalyticsData = {
   businessId: string;
+  businessCreatedAt: string;
   totals: {
     visits: number;
     googleClicks: number;
@@ -42,6 +43,26 @@ type AnalyticsDashboardProps = {
   businessSlug: string;
 };
 
+type PeriodType =
+  | "today"
+  | "yesterday"
+  | "last7"
+  | "last14"
+  | "last30"
+  | "thisWeek"
+  | "previousWeek"
+  | "thisMonth"
+  | "previousMonth"
+  | "custom"
+  | "all";
+
+type Period = {
+  type: PeriodType;
+  label: string;
+  from: string;
+  to: string;
+};
+
 function formatDate(date: string) {
   const [year, month, day] = date.split("-");
 
@@ -59,6 +80,181 @@ function formatDateTime(date: string | null) {
     dateStyle: "short",
     timeStyle: "short",
   });
+}
+
+function getMadridToday() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function addDays(dateString: string, amount: number) {
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  const date = new Date(
+    Date.UTC(year, month - 1, day)
+  );
+
+  date.setUTCDate(date.getUTCDate() + amount);
+
+  return date.toISOString().slice(0, 10);
+}
+
+function getMonday(dateString: string) {
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  const date = new Date(
+    Date.UTC(year, month - 1, day)
+  );
+
+  const dayOfWeek = date.getUTCDay();
+  const daysSinceMonday =
+    dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+  date.setUTCDate(
+    date.getUTCDate() - daysSinceMonday
+  );
+
+  return date.toISOString().slice(0, 10);
+}
+
+function getMonthStart(dateString: string) {
+  return `${dateString.slice(0, 7)}-01`;
+}
+
+function getPreviousMonthStart(dateString: string) {
+  const [year, month] = dateString
+    .slice(0, 7)
+    .split("-")
+    .map(Number);
+
+  const date = new Date(
+    Date.UTC(year, month - 2, 1)
+  );
+
+  return date.toISOString().slice(0, 10);
+}
+
+function getPreviousMonthEnd(dateString: string) {
+  return addDays(getMonthStart(dateString), -1);
+}
+
+function getPeriod(
+  type: PeriodType,
+  customFrom: string,
+  customTo: string,
+  businessCreatedAt: string
+): Period {
+  const today = getMadridToday();
+
+  if (type === "today") {
+    return {
+      type,
+      label: "Hoy",
+      from: today,
+      to: today,
+    };
+  }
+
+  if (type === "yesterday") {
+    const yesterday = addDays(today, -1);
+
+    return {
+      type,
+      label: "Ayer",
+      from: yesterday,
+      to: yesterday,
+    };
+  }
+
+  if (type === "last7") {
+    return {
+      type,
+      label: "Últimos 7 días",
+      from: addDays(today, -6),
+      to: today,
+    };
+  }
+
+  if (type === "last14") {
+    return {
+      type,
+      label: "Últimos 14 días",
+      from: addDays(today, -13),
+      to: today,
+    };
+  }
+
+  if (type === "last30") {
+    return {
+      type,
+      label: "Últimos 30 días",
+      from: addDays(today, -29),
+      to: today,
+    };
+  }
+
+  if (type === "thisWeek") {
+    const from = getMonday(today);
+
+    return {
+      type,
+      label: "Esta semana",
+      from,
+      to: addDays(from, 6),
+    };
+  }
+
+  if (type === "previousWeek") {
+    const currentMonday = getMonday(today);
+    const from = addDays(currentMonday, -7);
+
+    return {
+      type,
+      label: "Semana anterior",
+      from,
+      to: addDays(from, 6),
+    };
+  }
+
+  if (type === "thisMonth") {
+    return {
+      type,
+      label: "Este mes",
+      from: getMonthStart(today),
+      to: today,
+    };
+  }
+
+  if (type === "previousMonth") {
+    const from = getPreviousMonthStart(today);
+
+    return {
+      type,
+      label: "Mes anterior",
+      from,
+      to: getPreviousMonthEnd(today),
+    };
+  }
+
+  if (type === "custom") {
+    return {
+      type,
+      label: "Periodo personalizado",
+      from: customFrom || today,
+      to: customTo || today,
+    };
+  }
+
+  return {
+    type: "all",
+    label: "Histórico",
+    from: businessCreatedAt,
+    to: today,
+  };
 }
 
 function getSourceLabel(source: "nfc" | "qr" | "direct") {
@@ -338,7 +534,6 @@ function ActivityIcon() {
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );
@@ -359,6 +554,12 @@ export default function AnalyticsDashboard({
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+
+  const [periodType, setPeriodType] =
+    useState<PeriodType>("thisMonth");
+
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   useEffect(() => {
     async function checkAuthentication() {
@@ -396,14 +597,18 @@ export default function AnalyticsDashboard({
 
       try {
         const response = await fetch(
-          `/api/analytics?businessId=${encodeURIComponent(businessId)}`,
+          `/api/analytics?businessId=${encodeURIComponent(
+            businessId
+          )}`,
           {
             cache: "no-store",
           }
         );
 
         if (!response.ok) {
-          throw new Error("No se pudieron cargar las estadísticas.");
+          throw new Error(
+            "No se pudieron cargar las estadísticas."
+          );
         }
 
         const result = (await response.json()) as AnalyticsData;
@@ -419,7 +624,9 @@ export default function AnalyticsDashboard({
     loadAnalytics();
   }, [authenticated, businessId]);
 
-  async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
+  async function handleLogin(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     if (!password.trim()) {
@@ -464,11 +671,109 @@ export default function AnalyticsDashboard({
     }
   }
 
-  const chartData = useMemo(() => {
-    if (!data) {
+  const selectedPeriod = useMemo(
+    () =>
+      getPeriod(
+        periodType,
+        customFrom,
+        customTo,
+        data?.businessCreatedAt || getMadridToday()
+      ),
+    [
+      periodType,
+      customFrom,
+      customTo,
+      data?.businessCreatedAt,
+    ]
+  );
+
+  const customPeriodError =
+    periodType === "custom" &&
+    customFrom &&
+    customTo &&
+    customFrom > customTo;
+
+  const periodRows = useMemo(() => {
+    if (!data || customPeriodError) {
       return [];
     }
 
+    return data.daily.filter(
+      (row) =>
+        row.date >= selectedPeriod.from &&
+        row.date <= selectedPeriod.to
+    );
+  }, [
+    data,
+    selectedPeriod,
+    customPeriodError,
+  ]);
+
+  const periodData = useMemo(() => {
+    if (!data) {
+      return null;
+    }
+
+    let visits = 0;
+    let googleClicks = 0;
+
+    const bySource = {
+      nfc: {
+        visits: 0,
+        googleClicks: 0,
+      },
+      qr: {
+        visits: 0,
+        googleClicks: 0,
+      },
+      direct: {
+        visits: 0,
+        googleClicks: 0,
+      },
+    };
+
+    let lastActivity: string | null = null;
+
+    for (const row of periodRows) {
+      const rowVisits = Number(row.visits);
+      const rowGoogleClicks = Number(
+        row.google_clicks
+      );
+
+      visits += rowVisits;
+      googleClicks += rowGoogleClicks;
+
+      bySource[row.source].visits += rowVisits;
+      bySource[row.source].googleClicks +=
+        rowGoogleClicks;
+
+      if (
+        !lastActivity ||
+        row.last_activity > lastActivity
+      ) {
+        lastActivity = row.last_activity;
+      }
+    }
+
+    const interactionRate =
+      visits > 0
+        ? (googleClicks / visits) * 100
+        : 0;
+
+    return {
+      totals: {
+        visits,
+        googleClicks,
+        interactionRate: Number(
+          interactionRate.toFixed(2)
+        ),
+      },
+      bySource,
+      lastActivity,
+    };
+  }, [periodRows, data]);
+
+  const chartData = useMemo(() => {
     const grouped = new Map<
       string,
       {
@@ -478,7 +783,7 @@ export default function AnalyticsDashboard({
       }
     >();
 
-    for (const row of data.daily) {
+    for (const row of periodRows) {
       const current = grouped.get(row.date);
 
       if (current) {
@@ -493,8 +798,8 @@ export default function AnalyticsDashboard({
       }
     }
 
-    return Array.from(grouped.values()).slice(-14);
-  }, [data]);
+    return Array.from(grouped.values());
+  }, [periodRows]);
 
   const maxVisits = Math.max(
     ...chartData.map((item) => item.visits),
@@ -531,7 +836,10 @@ export default function AnalyticsDashboard({
           </div>
 
           <section className="analytics-login-card">
-            <div className="analytics-login-icon" aria-hidden="true">
+            <div
+              className="analytics-login-icon"
+              aria-hidden="true"
+            >
               <svg
                 viewBox="0 0 24 24"
                 width="22"
@@ -706,11 +1014,13 @@ export default function AnalyticsDashboard({
           </header>
 
           <div className="analytics-error">
-            <h2>No se han podido cargar las estadísticas</h2>
+            <h2>
+              No se han podido cargar las estadísticas
+            </h2>
 
             <p>
-              Comprueba que el servicio de estadísticas está disponible
-              e inténtalo de nuevo.
+              Comprueba que el servicio de estadísticas está
+              disponible e inténtalo de nuevo.
             </p>
           </div>
         </div>
@@ -739,7 +1049,8 @@ export default function AnalyticsDashboard({
               <h1>{businessName}</h1>
 
               <p>
-                Evolución de los accesos e interacciones de este local.
+                Evolución de los accesos e interacciones de este
+                local.
               </p>
             </div>
           </div>
@@ -770,6 +1081,179 @@ export default function AnalyticsDashboard({
           </div>
         </header>
 
+        <section
+          className="analytics-section"
+          style={{
+            marginBottom: "28px",
+          }}
+        >
+          <div
+            className="analytics-section-heading"
+            style={{
+              alignItems: "flex-start",
+              gap: "20px",
+            }}
+          >
+            <div>
+              <span className="analytics-section-label">
+                Periodo
+              </span>
+
+              <h2>{selectedPeriod.label}</h2>
+
+              <p
+                style={{
+                  margin: "6px 0 0",
+                  color: "#6b7280",
+                  fontSize: "0.9rem",
+                }}
+              >
+                {formatDate(selectedPeriod.from)} —{" "}
+                {formatDate(selectedPeriod.to)}
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-end",
+                gap: "10px",
+              }}
+            >
+              <select
+                className="analytics-period"
+                value={periodType}
+                onChange={(event) =>
+                  setPeriodType(
+                    event.target.value as PeriodType
+                  )
+                }
+                aria-label="Periodo de estadísticas"
+                style={{
+                  border: "1px solid #e5e7eb",
+                  background: "#ffffff",
+                  color: "#374151",
+                  borderRadius: "10px",
+                  padding: "9px 34px 9px 12px",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  outline: "none",
+                }}
+              >
+                <option value="today">Hoy</option>
+                <option value="yesterday">Ayer</option>
+                <option value="last7">
+                  Últimos 7 días
+                </option>
+                <option value="last14">
+                  Últimos 14 días
+                </option>
+                <option value="last30">
+                  Últimos 30 días
+                </option>
+                <option value="thisWeek">
+                  Esta semana
+                </option>
+                <option value="previousWeek">
+                  Semana anterior
+                </option>
+                <option value="thisMonth">
+                  Este mes
+                </option>
+                <option value="previousMonth">
+                  Mes anterior
+                </option>
+                <option value="custom">
+                  Periodo personalizado
+                </option>
+                <option value="all">
+                  Histórico
+                </option>
+              </select>
+
+              {periodType === "custom" && (
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "0.82rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    Desde
+                    <input
+                      type="date"
+                      value={customFrom}
+                      onChange={(event) =>
+                        setCustomFrom(event.target.value)
+                      }
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        padding: "7px 9px",
+                        background: "#ffffff",
+                        color: "#374151",
+                      }}
+                    />
+                  </label>
+
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "0.82rem",
+                      color: "#6b7280",
+                    }}
+                  >
+                    Hasta
+                    <input
+                      type="date"
+                      value={customTo}
+                      onChange={(event) =>
+                        setCustomTo(event.target.value)
+                      }
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        padding: "7px 9px",
+                        background: "#ffffff",
+                        color: "#374151",
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {customPeriodError && (
+            <div
+              className="analytics-error"
+              style={{
+                marginTop: "16px",
+                padding: "14px 16px",
+              }}
+            >
+              <p>
+                La fecha inicial no puede ser posterior a la
+                fecha final.
+              </p>
+            </div>
+          )}
+        </section>
+
         <section className="analytics-stats-grid">
           <article className="analytics-stat-card">
             <div className="analytics-stat-icon">
@@ -778,7 +1262,9 @@ export default function AnalyticsDashboard({
 
             <span>Visitas</span>
 
-            <strong>{data.totals.visits}</strong>
+            <strong>
+              {periodData?.totals.visits ?? 0}
+            </strong>
 
             <small>Accesos registrados</small>
           </article>
@@ -790,7 +1276,9 @@ export default function AnalyticsDashboard({
 
             <span>Google</span>
 
-            <strong>{data.totals.googleClicks}</strong>
+            <strong>
+              {periodData?.totals.googleClicks ?? 0}
+            </strong>
 
             <small>Clics en dejar reseña</small>
           </article>
@@ -802,7 +1290,9 @@ export default function AnalyticsDashboard({
 
             <span>Interacción</span>
 
-            <strong>{data.totals.interactionRate}%</strong>
+            <strong>
+              {periodData?.totals.interactionRate ?? 0}%
+            </strong>
 
             <small>Clics de Google sobre visitas</small>
           </article>
@@ -815,10 +1305,12 @@ export default function AnalyticsDashboard({
             <span>Última actividad</span>
 
             <strong className="analytics-stat-date">
-              {formatDateTime(data.lastActivity)}
+              {formatDateTime(
+                periodData?.lastActivity ?? null
+              )}
             </strong>
 
-            <small>Último evento registrado</small>
+            <small>Último evento del periodo</small>
           </article>
         </section>
 
@@ -831,6 +1323,10 @@ export default function AnalyticsDashboard({
 
               <h2>¿Cómo llegan los clientes?</h2>
             </div>
+
+            <span className="analytics-period">
+              {selectedPeriod.label}
+            </span>
           </div>
 
           <div className="analytics-source-grid">
@@ -843,12 +1339,15 @@ export default function AnalyticsDashboard({
                 <span>NFC</span>
               </div>
 
-              <strong>{data.bySource.nfc.visits}</strong>
+              <strong>
+                {periodData?.bySource.nfc.visits ?? 0}
+              </strong>
 
               <small>visitas</small>
 
               <div className="analytics-source-detail">
-                {data.bySource.nfc.googleClicks} clics en Google
+                {periodData?.bySource.nfc.googleClicks ?? 0}{" "}
+                clics en Google
               </div>
             </article>
 
@@ -861,12 +1360,15 @@ export default function AnalyticsDashboard({
                 <span>QR</span>
               </div>
 
-              <strong>{data.bySource.qr.visits}</strong>
+              <strong>
+                {periodData?.bySource.qr.visits ?? 0}
+              </strong>
 
               <small>visitas</small>
 
               <div className="analytics-source-detail">
-                {data.bySource.qr.googleClicks} clics en Google
+                {periodData?.bySource.qr.googleClicks ?? 0}{" "}
+                clics en Google
               </div>
             </article>
 
@@ -879,12 +1381,15 @@ export default function AnalyticsDashboard({
                 <span>Directo</span>
               </div>
 
-              <strong>{data.bySource.direct.visits}</strong>
+              <strong>
+                {periodData?.bySource.direct.visits ?? 0}
+              </strong>
 
               <small>visitas</small>
 
               <div className="analytics-source-detail">
-                {data.bySource.direct.googleClicks} clics en Google
+                {periodData?.bySource.direct.googleClicks ?? 0}{" "}
+                clics en Google
               </div>
             </article>
           </div>
@@ -901,13 +1406,17 @@ export default function AnalyticsDashboard({
             </div>
 
             <span className="analytics-period">
-              Últimos 14 días con actividad
+              {selectedPeriod.label}
             </span>
           </div>
 
-          {chartData.length === 0 ? (
+          {customPeriodError ? (
             <div className="analytics-empty">
-              Todavía no hay datos suficientes para mostrar la evolución.
+              Corrige el periodo seleccionado para mostrar los datos.
+            </div>
+          ) : chartData.length === 0 ? (
+            <div className="analytics-empty">
+              No hay actividad registrada en este periodo.
             </div>
           ) : (
             <div className="analytics-chart">
@@ -954,6 +1463,13 @@ export default function AnalyticsDashboard({
 
               <h2>Actividad registrada</h2>
             </div>
+
+            <span className="analytics-period">
+              {periodRows.length}{" "}
+              {periodRows.length === 1
+                ? "registro"
+                : "registros"}
+            </span>
           </div>
 
           <div className="analytics-table-wrapper">
@@ -969,26 +1485,47 @@ export default function AnalyticsDashboard({
               </thead>
 
               <tbody>
-                {data.daily
-                  .slice()
-                  .reverse()
-                  .map((row) => (
-                    <tr
-                      key={`${row.date}-${row.source}`}
+                {periodRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      style={{
+                        textAlign: "center",
+                        padding: "28px",
+                        color: "#6b7280",
+                      }}
                     >
-                      <td>{formatDate(row.date)}</td>
+                      No hay actividad registrada en este periodo.
+                    </td>
+                  </tr>
+                ) : (
+                  periodRows
+                    .slice()
+                    .reverse()
+                    .map((row) => (
+                      <tr
+                        key={`${row.date}-${row.source}`}
+                      >
+                        <td>{formatDate(row.date)}</td>
 
-                      <td>
-                        <span className="analytics-table-source">
-                          {getSourceLabel(row.source)}
-                        </span>
-                      </td>
+                        <td>
+                          <span className="analytics-table-source">
+                            {getSourceLabel(row.source)}
+                          </span>
+                        </td>
 
-                      <td>{row.visits}</td>
-                      <td>{row.google_clicks}</td>
-                      <td>{formatDateTime(row.last_activity)}</td>
-                    </tr>
-                  ))}
+                        <td>{row.visits}</td>
+
+                        <td>{row.google_clicks}</td>
+
+                        <td>
+                          {formatDateTime(
+                            row.last_activity
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                )}
               </tbody>
             </table>
           </div>

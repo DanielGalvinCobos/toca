@@ -75,6 +75,18 @@ function validateBusinessData(body: BusinessBody) {
   };
 }
 
+type BusinessApiResponse = {
+  businesses?: Awaited<ReturnType<typeof getAllBusinesses>>;
+  business?: Awaited<ReturnType<typeof createBusiness>>;
+  error?: string;
+};
+
+async function readResponse(
+  response: Response
+): Promise<BusinessApiResponse> {
+  return (await response.json()) as BusinessApiResponse;
+}
+
 export async function GET(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(

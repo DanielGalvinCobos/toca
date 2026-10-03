@@ -1,5 +1,7 @@
 import { env } from "cloudflare:workers";
 
+import { getBusinessById } from "@/lib/businesses";
+
 type AnalyticsEvent = {
   businessId?: string;
   source?: string;
@@ -116,9 +118,9 @@ export async function GET(request: Request) {
       );
     }
 
-    const exists = await businessExists(businessId);
+    const business = await getBusinessById(businessId);
 
-    if (!exists) {
+    if (!business) {
       return Response.json(
         { error: "El negocio no existe." },
         { status: 404 }
@@ -187,6 +189,7 @@ export async function GET(request: Request) {
 
     return Response.json({
       businessId,
+      businessCreatedAt: business.createdAt,
       totals: {
         visits: totalVisits,
         googleClicks: totalGoogleClicks,
