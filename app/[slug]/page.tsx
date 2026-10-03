@@ -134,6 +134,11 @@ export default async function BusinessPage({ params }: PageProps) {
         <p className="toca-footer-slogan">
           Todo tu negocio. En un toque.
         </p>
+
+        <a className="toca-footer-cta" href="/">
+          Conoce TOCA
+          <span aria-hidden="true">→</span>
+        </a>
       </footer>
 
       <AnalyticsTracker businessId={business.id} />

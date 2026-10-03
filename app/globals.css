@@ -55,9 +55,9 @@ a {
 .toca-page {
   position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   height: 100dvh;
-  min-height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -79,6 +79,7 @@ a {
   position: relative;
   z-index: 1;
   flex: 1;
+  min-height: 0;
   width: 100%;
   max-width: 700px;
   margin: 0 auto;
@@ -157,6 +158,64 @@ a {
   font-size: 1.2rem;
 }
 
+/* Promoción de TOCA en páginas de negocio */
+
+.toca-business-promo {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 24px 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.toca-business-promo-button {
+  min-height: 42px;
+  padding: 0 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--toca-gray);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 5px 18px rgba(39, 39, 80, 0.04);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.toca-business-promo-button span {
+  color: var(--toca-violet);
+  font-size: 0.95rem;
+  transition: transform 0.15s ease;
+}
+
+.toca-business-promo-button:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--toca-black);
+  transform: translateY(-1px);
+}
+
+.toca-business-promo-button:hover span {
+  transform: translateX(2px);
+}
+
+.toca-business-promo-button:active {
+  transform: scale(0.98);
+}
+
 .toca-footer {
   position: relative;
   z-index: 1;
@@ -177,25 +236,78 @@ a {
   line-height: 1.5;
 }
 
+.toca-footer-cta {
+  margin: 18px auto 0;
+  min-height: 40px;
+  padding: 0 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 11px;
+  background: rgba(99, 102, 241, 0.09);
+  color: var(--toca-violet);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 5px 18px rgba(99, 102, 241, 0.08);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.toca-footer-cta span {
+  color: var(--toca-violet);
+  font-size: 0.9rem;
+  transition: transform 0.15s ease;
+}
+
+.toca-footer-cta:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.14);
+  color: #4f46e5;
+  box-shadow: 0 7px 22px rgba(99, 102, 241, 0.12);
+  transform: translateY(-1px);
+}
+
+.toca-footer-cta:hover span {
+  transform: translateX(2px);
+}
+
+.toca-footer-cta:active {
+  transform: scale(0.98);
+}
+
 /* Ondas NFC de las páginas de negocio */
 
+/* --onda es el tamaño de cada onda: nunca pasa de 500px y se reduce
+   cuando la pantalla se estrecha (ancho) o se acorta (alto), para que
+   no lleguen a tapar el texto. El desplazamiento fuera de la pantalla
+   es proporcional (24%), así que la forma de las ondas no cambia. */
+
 .nfc-decoration {
+  --onda: min(500px, calc(100vw - 120px), 60dvh);
   position: absolute;
   z-index: 0;
-  width: 500px;
-  height: 500px;
+  width: var(--onda);
+  height: var(--onda);
   color: rgba(99, 102, 241, 0.16);
   pointer-events: none;
 }
 
 .nfc-decoration-left {
-  left: -120px;
-  bottom: -120px;
+  left: calc(var(--onda) * -0.24);
+  bottom: calc(var(--onda) * -0.24);
 }
 
 .nfc-decoration-right {
-  right: -120px;
-  top: -120px;
+  right: calc(var(--onda) * -0.24);
+  top: calc(var(--onda) * -0.24);
   transform: rotate(180deg);
 }
 
@@ -847,18 +959,7 @@ a {
   }
 
   .nfc-decoration {
-    width: 620px;
-    height: 620px;
-  }
-
-  .nfc-decoration-left {
-    left: -150px;
-    bottom: -150px;
-  }
-
-  .nfc-decoration-right {
-    right: -150px;
-    top: -150px;
+    --onda: min(620px, calc((100vw + 100dvh) * 0.85 - 690px));
   }
 
   .home {
@@ -3142,6 +3243,7 @@ a {
   }
 
   /* El título nunca queda separado de su contenido */
+
   .analytics-section-heading+.analytics-source-grid,
   .analytics-section-heading+.analytics-chart,
   .analytics-section-heading+.analytics-table-wrapper {
@@ -3150,6 +3252,7 @@ a {
   }
 
   /* El gráfico completo debe permanecer en una misma página */
+
   .analytics-chart {
     break-inside: avoid-page;
     page-break-inside: avoid;
@@ -3161,12 +3264,14 @@ a {
   }
 
   /* Mantener el bloque de gráfico + título unido */
+
   .analytics-section:has(.analytics-chart) {
     break-inside: avoid-page;
     page-break-inside: avoid;
   }
 
   /* Evitar que el navegador intente partir las columnas del gráfico */
+
   .analytics-chart-column {
     break-inside: avoid;
     page-break-inside: avoid;
