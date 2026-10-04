@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./AnalyticsDashboard.module.css";
 
 type AnalyticsRow = {
   date: string;
@@ -808,10 +809,10 @@ export default function AnalyticsDashboard({
 
   if (authenticated === null) {
     return (
-      <main className="analytics-page">
-        <div className="analytics-container">
-          <div className="analytics-loading">
-            <div className="analytics-loading-spinner" />
+      <main className={styles.analyticsPage}>
+        <div className={styles.analyticsContainer}>
+          <div className={styles.analyticsLoading}>
+            <div className={styles.analyticsLoadingSpinner} />
             <p>Comprobando acceso...</p>
           </div>
         </div>
@@ -821,11 +822,13 @@ export default function AnalyticsDashboard({
 
   if (!authenticated) {
     return (
-      <main className="analytics-page analytics-login-page">
-        <div className="analytics-login-background" />
+      <main
+        className={`${styles.analyticsPage} ${styles.analyticsLoginPage}`}
+      >
+        <div className={styles.analyticsLoginBackground} />
 
-        <div className="analytics-login-container">
-          <div className="analytics-login-logo">
+        <div className={styles.analyticsLoginContainer}>
+          <div className={styles.analyticsLoginLogo}>
             <Image
               src="/logo/toca.svg"
               alt="TOCA"
@@ -835,9 +838,9 @@ export default function AnalyticsDashboard({
             />
           </div>
 
-          <section className="analytics-login-card">
+          <section className={styles.analyticsLoginCard}>
             <div
-              className="analytics-login-icon"
+              className={styles.analyticsLoginIcon}
               aria-hidden="true"
             >
               <svg
@@ -872,22 +875,22 @@ export default function AnalyticsDashboard({
               </svg>
             </div>
 
-            <span className="analytics-login-label">
+            <span className={styles.analyticsLoginLabel}>
               Acceso privado
             </span>
 
             <h1>Estadísticas</h1>
 
-            <p className="analytics-login-business">
+            <p className={styles.analyticsLoginBusiness}>
               {businessName}
             </p>
 
-            <p className="analytics-login-description">
+            <p className={styles.analyticsLoginDescription}>
               Accede al panel de estadísticas de tu negocio.
             </p>
 
             <form
-              className="analytics-login-form"
+              className={styles.analyticsLoginForm}
               onSubmit={handleLogin}
             >
               <label htmlFor="analytics-password">
@@ -909,7 +912,7 @@ export default function AnalyticsDashboard({
 
               {loginError && (
                 <div
-                  className="analytics-login-error"
+                  className={styles.analyticsLoginError}
                   aria-live="polite"
                 >
                   <span aria-hidden="true">!</span>
@@ -919,7 +922,7 @@ export default function AnalyticsDashboard({
 
               <button
                 type="submit"
-                className="analytics-login-button"
+                className={styles.analyticsLoginButton}
                 disabled={loggingIn}
               >
                 <span>
@@ -934,8 +937,10 @@ export default function AnalyticsDashboard({
               </button>
             </form>
 
-            <div className="analytics-login-footer">
-              <span className="analytics-login-footer-dot" />
+            <div className={styles.analyticsLoginFooter}>
+              <span
+                className={styles.analyticsLoginFooterDot}
+              />
               Acceso exclusivo de TOCA
             </div>
           </section>
@@ -946,10 +951,10 @@ export default function AnalyticsDashboard({
 
   if (loading) {
     return (
-      <main className="analytics-page">
-        <div className="analytics-container">
-          <div className="analytics-loading">
-            <div className="analytics-loading-spinner" />
+      <main className={styles.analyticsPage}>
+        <div className={styles.analyticsContainer}>
+          <div className={styles.analyticsLoading}>
+            <div className={styles.analyticsLoadingSpinner} />
             <p>Cargando estadísticas...</p>
           </div>
         </div>
@@ -959,10 +964,10 @@ export default function AnalyticsDashboard({
 
   if (error || !data) {
     return (
-      <main className="analytics-page">
-        <div className="analytics-container">
-          <header className="analytics-header">
-            <div className="analytics-brand">
+      <main className={styles.analyticsPage}>
+        <div className={styles.analyticsContainer}>
+          <header className={styles.analyticsHeader}>
+            <div className={styles.analyticsBrand}>
               <Image
                 src="/logo/toca.svg"
                 alt="TOCA"
@@ -972,9 +977,9 @@ export default function AnalyticsDashboard({
               />
             </div>
 
-            <div className="analytics-header-content">
+            <div className={styles.analyticsHeaderContent}>
               <div>
-                <span className="analytics-eyebrow">
+                <span className={styles.analyticsEyebrow}>
                   Estadísticas
                 </span>
 
@@ -986,14 +991,14 @@ export default function AnalyticsDashboard({
                 </p>
               </div>
 
-              <div className="analytics-actions">
+              <div className={styles.analyticsActions}>
                 <button
-                  className="analytics-print-button"
+                  className={styles.analyticsPrintButton}
                   type="button"
                   onClick={() => window.print()}
                 >
                   <span
-                    className="analytics-print-icon"
+                    className={styles.analyticsPrintIcon}
                     aria-hidden="true"
                   >
                     ↓
@@ -1003,7 +1008,7 @@ export default function AnalyticsDashboard({
                 </button>
 
                 <a
-                  className="analytics-back"
+                  className={styles.analyticsBack}
                   href={`/${businessSlug}`}
                 >
                   Ver página
@@ -1013,7 +1018,7 @@ export default function AnalyticsDashboard({
             </div>
           </header>
 
-          <div className="analytics-error">
+          <div className={styles.analyticsError}>
             <h2>
               No se han podido cargar las estadísticas
             </h2>
@@ -1029,10 +1034,10 @@ export default function AnalyticsDashboard({
   }
 
   return (
-    <main className="analytics-page">
-      <div className="analytics-container">
-        <header className="analytics-header">
-          <div className="analytics-brand">
+    <main className={styles.analyticsPage}>
+      <div className={styles.analyticsContainer}>
+        <header className={styles.analyticsHeader}>
+          <div className={styles.analyticsBrand}>
             <Image
               src="/logo/toca.svg"
               alt="TOCA"
@@ -1042,7 +1047,7 @@ export default function AnalyticsDashboard({
             />
 
             <div>
-              <span className="analytics-eyebrow">
+              <span className={styles.analyticsEyebrow}>
                 Estadísticas
               </span>
 
@@ -1055,14 +1060,14 @@ export default function AnalyticsDashboard({
             </div>
           </div>
 
-          <div className="analytics-actions">
+          <div className={styles.analyticsActions}>
             <button
-              className="analytics-print-button"
+              className={styles.analyticsPrintButton}
               type="button"
               onClick={() => window.print()}
             >
               <span
-                className="analytics-print-icon"
+                className={styles.analyticsPrintIcon}
                 aria-hidden="true"
               >
                 ↓
@@ -1072,7 +1077,7 @@ export default function AnalyticsDashboard({
             </button>
 
             <a
-              className="analytics-back"
+              className={styles.analyticsBack}
               href={`/${businessSlug}`}
             >
               Ver página
@@ -1082,20 +1087,20 @@ export default function AnalyticsDashboard({
         </header>
 
         <section
-          className="analytics-section"
+          className={styles.analyticsSection}
           style={{
             marginBottom: "28px",
           }}
         >
           <div
-            className="analytics-section-heading"
+            className={styles.analyticsSectionHeading}
             style={{
               alignItems: "flex-start",
               gap: "20px",
             }}
           >
             <div>
-              <span className="analytics-section-label">
+              <span className={styles.analyticsSectionLabel}>
                 Periodo
               </span>
 
@@ -1122,7 +1127,7 @@ export default function AnalyticsDashboard({
               }}
             >
               <select
-                className="analytics-period"
+                className={styles.analyticsPeriod}
                 value={periodType}
                 onChange={(event) =>
                   setPeriodType(
@@ -1240,7 +1245,7 @@ export default function AnalyticsDashboard({
 
           {customPeriodError && (
             <div
-              className="analytics-error"
+              className={styles.analyticsError}
               style={{
                 marginTop: "16px",
                 padding: "14px 16px",
@@ -1254,9 +1259,9 @@ export default function AnalyticsDashboard({
           )}
         </section>
 
-        <section className="analytics-stats-grid">
-          <article className="analytics-stat-card">
-            <div className="analytics-stat-icon">
+        <section className={styles.analyticsStatsGrid}>
+          <article className={styles.analyticsStatCard}>
+            <div className={styles.analyticsStatIcon}>
               <VisitsIcon />
             </div>
 
@@ -1269,8 +1274,8 @@ export default function AnalyticsDashboard({
             <small>Accesos registrados</small>
           </article>
 
-          <article className="analytics-stat-card">
-            <div className="analytics-stat-icon">
+          <article className={styles.analyticsStatCard}>
+            <div className={styles.analyticsStatIcon}>
               <GoogleIcon />
             </div>
 
@@ -1283,8 +1288,8 @@ export default function AnalyticsDashboard({
             <small>Clics en dejar reseña</small>
           </article>
 
-          <article className="analytics-stat-card">
-            <div className="analytics-stat-icon">
+          <article className={styles.analyticsStatCard}>
+            <div className={styles.analyticsStatIcon}>
               <InteractionIcon />
             </div>
 
@@ -1297,14 +1302,14 @@ export default function AnalyticsDashboard({
             <small>Clics de Google sobre visitas</small>
           </article>
 
-          <article className="analytics-stat-card">
-            <div className="analytics-stat-icon">
+          <article className={styles.analyticsStatCard}>
+            <div className={styles.analyticsStatIcon}>
               <ActivityIcon />
             </div>
 
             <span>Última actividad</span>
 
-            <strong className="analytics-stat-date">
+            <strong className={styles.analyticsStatDate}>
               {formatDateTime(
                 periodData?.lastActivity ?? null
               )}
@@ -1314,25 +1319,27 @@ export default function AnalyticsDashboard({
           </article>
         </section>
 
-        <section className="analytics-section analytics-print-avoid">
-          <div className="analytics-section-heading">
+        <section
+          className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
+        >
+          <div className={styles.analyticsSectionHeading}>
             <div>
-              <span className="analytics-section-label">
+              <span className={styles.analyticsSectionLabel}>
                 Origen de los accesos
               </span>
 
               <h2>¿Cómo llegan los clientes?</h2>
             </div>
 
-            <span className="analytics-period">
+            <span className={styles.analyticsPeriod}>
               {selectedPeriod.label}
             </span>
           </div>
 
-          <div className="analytics-source-grid">
-            <article className="analytics-source-card">
-              <div className="analytics-source-top">
-                <span className="analytics-source-icon">
+          <div className={styles.analyticsSourceGrid}>
+            <article className={styles.analyticsSourceCard}>
+              <div className={styles.analyticsSourceTop}>
+                <span className={styles.analyticsSourceIcon}>
                   <NfcSourceIcon />
                 </span>
 
@@ -1345,15 +1352,15 @@ export default function AnalyticsDashboard({
 
               <small>visitas</small>
 
-              <div className="analytics-source-detail">
+              <div className={styles.analyticsSourceDetail}>
                 {periodData?.bySource.nfc.googleClicks ?? 0}{" "}
                 clics en Google
               </div>
             </article>
 
-            <article className="analytics-source-card">
-              <div className="analytics-source-top">
-                <span className="analytics-source-icon">
+            <article className={styles.analyticsSourceCard}>
+              <div className={styles.analyticsSourceTop}>
+                <span className={styles.analyticsSourceIcon}>
                   <QrSourceIcon />
                 </span>
 
@@ -1366,15 +1373,15 @@ export default function AnalyticsDashboard({
 
               <small>visitas</small>
 
-              <div className="analytics-source-detail">
+              <div className={styles.analyticsSourceDetail}>
                 {periodData?.bySource.qr.googleClicks ?? 0}{" "}
                 clics en Google
               </div>
             </article>
 
-            <article className="analytics-source-card">
-              <div className="analytics-source-top">
-                <span className="analytics-source-icon">
+            <article className={styles.analyticsSourceCard}>
+              <div className={styles.analyticsSourceTop}>
+                <span className={styles.analyticsSourceIcon}>
                   <DirectSourceIcon />
                 </span>
 
@@ -1387,7 +1394,7 @@ export default function AnalyticsDashboard({
 
               <small>visitas</small>
 
-              <div className="analytics-source-detail">
+              <div className={styles.analyticsSourceDetail}>
                 {periodData?.bySource.direct.googleClicks ?? 0}{" "}
                 clics en Google
               </div>
@@ -1395,32 +1402,34 @@ export default function AnalyticsDashboard({
           </div>
         </section>
 
-        <section className="analytics-section analytics-print-avoid">
-          <div className="analytics-section-heading">
+        <section
+          className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
+        >
+          <div className={styles.analyticsSectionHeading}>
             <div>
-              <span className="analytics-section-label">
+              <span className={styles.analyticsSectionLabel}>
                 Evolución
               </span>
 
               <h2>Accesos por día</h2>
             </div>
 
-            <span className="analytics-period">
+            <span className={styles.analyticsPeriod}>
               {selectedPeriod.label}
             </span>
           </div>
 
           {customPeriodError ? (
-            <div className="analytics-empty">
+            <div className={styles.analyticsEmpty}>
               Corrige el periodo seleccionado para mostrar los datos.
             </div>
           ) : chartData.length === 0 ? (
-            <div className="analytics-empty">
+            <div className={styles.analyticsEmpty}>
               No hay actividad registrada en este periodo.
             </div>
           ) : (
-            <div className="analytics-chart">
-              <div className="analytics-chart-bars">
+            <div className={styles.analyticsChart}>
+              <div className={styles.analyticsChartBars}>
                 {chartData.map((item) => {
                   const height = Math.max(
                     (item.visits / maxVisits) * 100,
@@ -1429,16 +1438,16 @@ export default function AnalyticsDashboard({
 
                   return (
                     <div
-                      className="analytics-chart-column"
+                      className={styles.analyticsChartColumn}
                       key={item.date}
                     >
-                      <div className="analytics-chart-value">
+                      <div className={styles.analyticsChartValue}>
                         {item.visits}
                       </div>
 
-                      <div className="analytics-chart-track">
+                      <div className={styles.analyticsChartTrack}>
                         <div
-                          className="analytics-chart-bar"
+                          className={styles.analyticsChartBar}
                           style={{
                             height: `${height}%`,
                           }}
@@ -1454,17 +1463,19 @@ export default function AnalyticsDashboard({
           )}
         </section>
 
-        <section className="analytics-section analytics-print-avoid">
-          <div className="analytics-section-heading">
+        <section
+          className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
+        >
+          <div className={styles.analyticsSectionHeading}>
             <div>
-              <span className="analytics-section-label">
+              <span className={styles.analyticsSectionLabel}>
                 Detalle
               </span>
 
               <h2>Actividad registrada</h2>
             </div>
 
-            <span className="analytics-period">
+            <span className={styles.analyticsPeriod}>
               {periodRows.length}{" "}
               {periodRows.length === 1
                 ? "registro"
@@ -1472,8 +1483,8 @@ export default function AnalyticsDashboard({
             </span>
           </div>
 
-          <div className="analytics-table-wrapper">
-            <table className="analytics-table">
+          <div className={styles.analyticsTableWrapper}>
+            <table className={styles.analyticsTable}>
               <thead>
                 <tr>
                   <th>Fecha</th>
@@ -1509,7 +1520,11 @@ export default function AnalyticsDashboard({
                         <td>{formatDate(row.date)}</td>
 
                         <td>
-                          <span className="analytics-table-source">
+                          <span
+                            className={
+                              styles.analyticsTableSource
+                            }
+                          >
                             {getSourceLabel(row.source)}
                           </span>
                         </td>
@@ -1531,9 +1546,9 @@ export default function AnalyticsDashboard({
           </div>
         </section>
 
-        <footer className="analytics-footer">
+        <footer className={styles.analyticsFooter}>
           <Image
-            className="analytics-footer-logo"
+            className={styles.analyticsFooterLogo}
             src="/logo/toca.svg"
             alt="TOCA"
             width={70}

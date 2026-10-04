@@ -1,9 +1,15 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 
 import styles from "./GestionPanel.module.css";
+
+type BusinessStats = {
+  visits: number;
+  googleClicks: number;
+  lastActivity: string | null;
+};
 
 type Business = {
   id: string;
@@ -11,6 +17,8 @@ type Business = {
   slug: string;
   googleReviewUrl: string;
   logoUrl?: string;
+  createdAt: string;
+  active: boolean;
 };
 
 type BusinessForm = {
@@ -20,8 +28,26 @@ type BusinessForm = {
   logoUrl: string;
 };
 
+type DailyActivity = {
+  date: string;
+  visits: number;
+  googleClicks: number;
+};
+
+type ManagementSummary = {
+  active: number;
+  inactive: number;
+  total: number;
+  visits: number;
+  googleClicks: number;
+  lastActivity: string | null;
+};
+
 type BusinessesResponse = {
   businesses?: Business[];
+  summary?: ManagementSummary;
+  statsByBusiness?: Record<string, BusinessStats>;
+  daily?: DailyActivity[];
   error?: string;
 };
 
@@ -35,11 +61,22 @@ type AuthResponse = {
   error?: string;
 };
 
+type StatusFilter = "all" | "active" | "inactive";
+
 const emptyForm: BusinessForm = {
   name: "",
   slug: "",
   googleReviewUrl: "",
   logoUrl: "",
+};
+
+const emptySummary: ManagementSummary = {
+  active: 0,
+  inactive: 0,
+  total: 0,
+  visits: 0,
+  googleClicks: 0,
+  lastActivity: null,
 };
 
 function createSlug(value: string) {
@@ -49,6 +86,59 @@ function createSlug(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("es-ES").format(value);
+}
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "Sin actividad";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatCreatedDate(value: string) {
+  if (!value) {
+    return "Fecha desconocida";
+  }
+
+  const date = new Date(`${value}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatActivityDate(value: string) {
+  const date = new Date(`${value}T12:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
 }
 
 function StoreIcon() {
@@ -157,8 +247,6 @@ function LockIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       aria-hidden="true"
     >
       <rect x="4" y="10" width="16" height="10" rx="2" />
@@ -194,25 +282,144 @@ function AlertIcon() {
   );
 }
 
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 7h16" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+function ActivateIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 11a8 8 0 1 0 1 4" />
+      <path d="M20 4v7h-7" />
+    </svg>
+  );
+}
+
+function ActivityIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 19V5" />
+      <path d="M4 19h17" />
+      <path d="m7 15 3-3 3 2 5-7" />
+    </svg>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 6h16" />
+      <path d="M7 12h10" />
+      <path d="M10 18h4" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4 4" />
+    </svg>
+  );
+}
+
 export default function GestionPanel() {
   const [authenticated, setAuthenticated] = useState<boolean | null>(
     null
   );
 
   const [password, setPassword] = useState("");
-
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [summary, setSummary] =
+    useState<ManagementSummary>(emptySummary);
+  const [statsByBusiness, setStatsByBusiness] = useState<
+    Record<string, BusinessStats>
+  >({});
+  const [dailyActivity, setDailyActivity] = useState<
+    DailyActivity[]
+  >([]);
 
   const [form, setForm] = useState<BusinessForm>(emptyForm);
-
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>("all");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [quickDeletingId, setQuickDeletingId] = useState<
+    string | null
+  >(null);
+  const [activatingId, setActivatingId] = useState<string | null>(
+    null
+  );
 
   const [loginError, setLoginError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
 
   async function checkAuthentication() {
     try {
@@ -255,6 +462,9 @@ export default function GestionPanel() {
       }
 
       setBusinesses(data.businesses || []);
+      setSummary(data.summary || emptySummary);
+      setStatsByBusiness(data.statsByBusiness || {});
+      setDailyActivity(data.daily || []);
     } catch {
       setError("No se pudieron cargar los negocios.");
     }
@@ -302,19 +512,65 @@ export default function GestionPanel() {
     }
   }
 
+  async function handleLogout() {
+    setLogoutConfirmOpen(false);
+
+    try {
+      await fetch("/api/analytics/auth", {
+        method: "DELETE",
+      });
+    } finally {
+      setAuthenticated(false);
+      setPassword("");
+      setBusinesses([]);
+      setSummary(emptySummary);
+      setStatsByBusiness({});
+      setDailyActivity([]);
+      setForm(emptyForm);
+      setEditingId(null);
+      setFormOpen(false);
+      setSearchTerm("");
+      setStatusFilter("all");
+      setError("");
+      setSuccess("");
+    }
+  }
+
+  function scrollToForm() {
+    window.setTimeout(() => {
+      const formSection = document.querySelector(
+        `.${styles.formSection}`
+      );
+
+      if (formSection instanceof HTMLElement) {
+        const top =
+          formSection.getBoundingClientRect().top +
+          window.scrollY -
+          18;
+
+        window.scrollTo({
+          top,
+          behavior: "smooth",
+        });
+      }
+    }, 50);
+  }
+
   function startCreating() {
     setEditingId(null);
     setForm(emptyForm);
     setError("");
     setSuccess("");
+    setFormOpen(true);
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    scrollToForm();
   }
 
   function startEditing(business: Business) {
+    if (!business.active) {
+      return;
+    }
+
     setEditingId(business.id);
 
     setForm({
@@ -326,25 +582,29 @@ export default function GestionPanel() {
 
     setError("");
     setSuccess("");
+    setFormOpen(true);
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    scrollToForm();
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setEditingId(null);
+    setForm(emptyForm);
+    setError("");
   }
 
   function handleNameChange(value: string) {
     setForm((current) => ({
       ...current,
       name: value,
-      slug:
-        editingId || current.slug
-          ? current.slug
-          : createSlug(value),
+      slug: editingId ? current.slug : createSlug(value),
     }));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault();
 
     setSaving(true);
@@ -382,22 +642,267 @@ export default function GestionPanel() {
         return;
       }
 
-      setSuccess(
-        editingId
-          ? "Negocio actualizado correctamente."
-          : "Negocio creado correctamente."
-      );
+      const message = editingId
+        ? "Negocio actualizado correctamente."
+        : "Negocio creado correctamente.";
+
+      setSuccess(message);
 
       setForm(emptyForm);
       setEditingId(null);
+      setFormOpen(false);
 
       await loadBusinesses();
+
+      window.setTimeout(() => {
+        setSuccess("");
+      }, 4500);
     } catch {
       setError("No se pudo guardar el negocio.");
     } finally {
       setSaving(false);
     }
   }
+
+  async function deactivateBusiness(
+    businessId: string,
+    businessName: string
+  ) {
+    if (quickDeletingId || deleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Seguro que quieres desactivar "${businessName}"?\n\n` +
+      "Su página pública dejará de estar disponible, " +
+      "pero sus estadísticas se conservarán."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setQuickDeletingId(businessId);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/gestion", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: businessId,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+      };
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setError(
+          data.error || "No se pudo desactivar el negocio."
+        );
+        return;
+      }
+
+      setSuccess(
+        "Negocio desactivado correctamente. Sus estadísticas se han conservado."
+      );
+
+      await loadBusinesses();
+
+      window.setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch {
+      setError("No se pudo desactivar el negocio.");
+    } finally {
+      setQuickDeletingId(null);
+    }
+  }
+
+  async function activateBusiness(
+    businessId: string,
+    businessName: string
+  ) {
+    if (
+      activatingId ||
+      quickDeletingId ||
+      deleting
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Quieres reactivar "${businessName}"?\n\n` +
+      "Su página pública volverá a estar disponible " +
+      "y conservará sus estadísticas."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setActivatingId(businessId);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/gestion", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: businessId,
+          action: "activate",
+        }),
+      });
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+      };
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setError(
+          data.error ||
+          "No se pudo reactivar el negocio."
+        );
+        return;
+      }
+
+      setSuccess(
+        "Negocio reactivado correctamente. " +
+        "Su página pública vuelve a estar disponible."
+      );
+
+      await loadBusinesses();
+
+      window.setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch {
+      setError("No se pudo reactivar el negocio.");
+    } finally {
+      setActivatingId(null);
+    }
+  }
+
+  async function handleDelete() {
+    if (!editingId || deleting) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Seguro que quieres eliminar "${form.name}"?\n\n` +
+      "Su página pública dejará de estar disponible, " +
+      "pero sus estadísticas se conservarán."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeleting(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const response = await fetch("/api/gestion", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: editingId,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+      };
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setError(
+          data.error || "No se pudo eliminar el negocio."
+        );
+        return;
+      }
+
+      setFormOpen(false);
+      setEditingId(null);
+      setForm(emptyForm);
+
+      setSuccess(
+        "Negocio desactivado correctamente. Sus estadísticas se han conservado."
+      );
+
+      await loadBusinesses();
+
+      window.setTimeout(() => {
+        setSuccess("");
+      }, 5000);
+    } catch {
+      setError("No se pudo eliminar el negocio.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const filteredBusinesses = useMemo(() => {
+    const normalizedSearch = searchTerm
+      .trim()
+      .toLowerCase();
+
+    return businesses.filter((business) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        business.name
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        business.slug
+          .toLowerCase()
+          .includes(normalizedSearch);
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && business.active) ||
+        (statusFilter === "inactive" && !business.active);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [businesses, searchTerm, statusFilter]);
+
+  const maxActivity = useMemo(() => {
+    return Math.max(
+      1,
+      ...dailyActivity.map(
+        (activity) =>
+          activity.visits + activity.googleClicks
+      )
+    );
+  }, [dailyActivity]);
 
   if (loading || authenticated === null) {
     return (
@@ -503,189 +1008,248 @@ export default function GestionPanel() {
           </div>
 
           <div className={styles.headerContent}>
-            <div>
+            <div className={styles.headerText}>
               <span className={styles.eyebrow}>
-                Panel de administración
+                Panel privado
               </span>
 
-              <h1>Gestión de negocios</h1>
+              <h1>Tu panel de TOCA</h1>
 
               <p>
-                Administra los negocios conectados a TOCA y
-                configura sus páginas.
+                Gestiona tus negocios y controla todo desde
+                un mismo lugar.
               </p>
             </div>
 
-            <a href="/" className={styles.backButton}>
-              <span>Ir al inicio</span>
-              <ExternalIcon />
-            </a>
+            <div className={styles.headerActions}>
+              <button
+                type="button"
+                className={styles.logoutButton}
+                onClick={() => setLogoutConfirmOpen(true)}
+              >
+                <span>Cerrar sesión</span>
+              </button>
+
+              <a href="/" className={styles.backButton}>
+                <span>Ir al inicio</span>
+                <ExternalIcon />
+              </a>
+            </div>
           </div>
         </header>
 
-        <section className={styles.formSection}>
-          <div className={styles.sectionHeading}>
-            <div className={styles.sectionHeadingMain}>
-              <div className={styles.sectionIcon}>
-                {editingId ? <EditIcon /> : <PlusIcon />}
-              </div>
+        <section className={styles.dashboardSection}>
+          <div className={styles.dashboardHeader}>
+            <div className={styles.dashboardIntroText}>
+              <span className={styles.dashboardEyebrow}>
+                Centro de control
+              </span>
 
-              <div>
-                <span className={styles.sectionLabel}>
-                  {editingId ? "Configuración" : "Nuevo registro"}
-                </span>
+              <h2>Todo listo para gestionar.</h2>
 
-                <h2>
-                  {editingId
-                    ? "Editar negocio"
-                    : "Añadir negocio"}
-                </h2>
-
-                <p>
-                  {editingId
-                    ? "Modifica los datos asociados a este negocio."
-                    : "Crea una nueva página para un negocio de TOCA."}
-                </p>
-              </div>
+              <p>
+                Consulta el estado de tus negocios y el
+                rendimiento global de TOCA desde un único lugar.
+              </p>
             </div>
 
-            {editingId && (
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={startCreating}
-              >
-                Cancelar edición
-              </button>
-            )}
+            <button
+              type="button"
+              className={styles.dashboardCreateButton}
+              onClick={startCreating}
+            >
+              <PlusIcon />
+              <span>Nuevo negocio</span>
+            </button>
           </div>
 
-          <form
-            className={styles.form}
-            onSubmit={handleSubmit}
-          >
-            <div className={styles.formGrid}>
-              <div className={styles.field}>
-                <label htmlFor="business-name">
-                  Nombre del negocio
-                </label>
-
-                <input
-                  id="business-name"
-                  type="text"
-                  value={form.name}
-                  onChange={(event) =>
-                    handleNameChange(event.target.value)
-                  }
-                  placeholder="Ej. Bar Pepe"
-                  required
-                />
+          <div className={styles.dashboardStats}>
+            <article className={styles.dashboardStat}>
+              <div className={styles.dashboardStatIcon}>
+                <StoreIcon />
               </div>
 
-              <div className={styles.field}>
-                <label htmlFor="business-slug">
-                  Slug
-                </label>
+              <div className={styles.dashboardStatContent}>
+                <span>Negocios activos</span>
 
-                <input
-                  id="business-slug"
-                  type="text"
-                  value={form.slug}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      slug: createSlug(event.target.value),
-                    }))
-                  }
-                  placeholder="bar-pepe"
-                  required
-                />
+                <strong>{summary.active}</strong>
 
-                <span className={styles.help}>
-                  URL pública:{" "}
-                  <strong>/{form.slug || "..."}</strong>
-                </span>
+                <p>
+                  {summary.active === 1
+                    ? "negocio disponible"
+                    : "negocios disponibles"}
+                </p>
               </div>
+            </article>
 
-              <div className={styles.fieldFull}>
-                <label htmlFor="google-review-url">
-                  URL de reseñas de Google
-                </label>
-
-                <input
-                  id="google-review-url"
-                  type="url"
-                  value={form.googleReviewUrl}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      googleReviewUrl: event.target.value,
-                    }))
-                  }
-                  placeholder="https://g.page/r/..."
-                  required
-                />
-
-                <span className={styles.help}>
-                  Enlace al formulario de reseña del negocio en
-                  Google.
-                </span>
-              </div>
-
-              <div className={styles.fieldFull}>
-                <label htmlFor="logo-url">
-                  URL del logo
-                  <span className={styles.optional}>
-                    {" "}
-                    · opcional
-                  </span>
-                </label>
-
-                <input
-                  id="logo-url"
-                  type="url"
-                  value={form.logoUrl}
-                  onChange={(event) =>
-                    setForm((current) => ({
-                      ...current,
-                      logoUrl: event.target.value,
-                    }))
-                  }
-                  placeholder="https://..."
-                />
-              </div>
-            </div>
-
-            {error && (
-              <div className={styles.formError}>
-                <AlertIcon />
-                <span>{error}</span>
-              </div>
-            )}
-
-            {success && (
-              <div className={styles.formSuccess}>
-                <span className={styles.successCheck}>✓</span>
-                <span>{success}</span>
-              </div>
-            )}
-
-            <div className={styles.formActions}>
-              <button
-                type="submit"
-                className={styles.primaryButton}
-                disabled={saving}
+            <article className={styles.dashboardStat}>
+              <div
+                className={`${styles.dashboardStatIcon} ${styles.dashboardStatIconMuted}`}
               >
-                {saving
-                  ? "Guardando..."
-                  : editingId
-                    ? "Guardar cambios"
-                    : "Crear negocio"}
+                <StoreIcon />
+              </div>
 
-                {!saving && <ArrowIcon />}
-              </button>
+              <div className={styles.dashboardStatContent}>
+                <span>Negocios inactivos</span>
+
+                <strong>{summary.inactive}</strong>
+
+                <p>
+                  {summary.inactive === 1
+                    ? "negocio desactivado"
+                    : "negocios desactivados"}
+                </p>
+              </div>
+            </article>
+
+            <article className={styles.dashboardStat}>
+              <div className={styles.dashboardStatIcon}>
+                <ExternalIcon />
+              </div>
+
+              <div className={styles.dashboardStatContent}>
+                <span>Visitas totales</span>
+
+                <strong>
+                  {formatNumber(summary.visits)}
+                </strong>
+
+                <p>
+                  Actividad registrada en las páginas
+                </p>
+              </div>
+            </article>
+
+            <article
+              className={`${styles.dashboardStat} ${styles.dashboardStatAccent}`}
+            >
+              <div className={styles.dashboardStatIcon}>
+                <ChartIcon />
+              </div>
+
+              <div className={styles.dashboardStatContent}>
+                <span>Interacciones</span>
+
+                <strong>
+                  {formatNumber(summary.googleClicks)}
+                </strong>
+
+                <p>
+                  Clics registrados hacia Google
+                </p>
+              </div>
+            </article>
+          </div>
+
+          <div className={styles.activityCard}>
+            <div className={styles.activityHeader}>
+              <div className={styles.activityTitle}>
+                <div className={styles.activityIcon}>
+                  <ActivityIcon />
+                </div>
+
+                <div>
+                  <span>Actividad reciente</span>
+                  <h3>Últimos 14 días</h3>
+                </div>
+              </div>
+
+              <div className={styles.activityLegend}>
+                <span>
+                  <i className={styles.legendVisits} />
+                  Visitas
+                </span>
+
+                <span>
+                  <i className={styles.legendClicks} />
+                  Interacciones
+                </span>
+              </div>
             </div>
-          </form>
+
+            {dailyActivity.length === 0 ? (
+              <div className={styles.activityEmpty}>
+                <ActivityIcon />
+
+                <p>
+                  Aún no hay actividad registrada.
+                </p>
+
+                <span>
+                  Cuando tus páginas reciban visitas,
+                  aparecerán aquí.
+                </span>
+              </div>
+            ) : (
+              <div className={styles.activityList}>
+                {dailyActivity.map((activity) => {
+                  const visitsWidth =
+                    (activity.visits / maxActivity) * 100;
+
+                  const clicksWidth =
+                    (activity.googleClicks / maxActivity) *
+                    100;
+
+                  return (
+                    <div
+                      className={styles.activityRow}
+                      key={activity.date}
+                    >
+                      <span className={styles.activityDate}>
+                        {formatActivityDate(activity.date)}
+                      </span>
+
+                      <div className={styles.activityBars}>
+                        <div className={styles.activityTrack}>
+                          <span
+                            className={`${styles.activityBar} ${styles.activityBarVisits}`}
+                            style={{
+                              width: `${Math.max(
+                                activity.visits > 0
+                                  ? visitsWidth
+                                  : 0,
+                                activity.visits > 0
+                                  ? 3
+                                  : 0
+                              )}%`,
+                            }}
+                          />
+                        </div>
+
+                        <div className={styles.activityTrack}>
+                          <span
+                            className={`${styles.activityBar} ${styles.activityBarClicks}`}
+                            style={{
+                              width: `${Math.max(
+                                activity.googleClicks > 0
+                                  ? clicksWidth
+                                  : 0,
+                                activity.googleClicks > 0
+                                  ? 3
+                                  : 0
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className={styles.activityValues}>
+                        <strong>
+                          {formatNumber(activity.visits)}
+                        </strong>
+
+                        <span>
+                          {formatNumber(
+                            activity.googleClicks
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </section>
 
         <section className={styles.businessSection}>
@@ -700,12 +1264,12 @@ export default function GestionPanel() {
                   Directorio
                 </span>
 
-                <h2>Negocios</h2>
+                <h2>Mis negocios</h2>
 
                 <p>
-                  {businesses.length} negocio
-                  {businesses.length === 1 ? "" : "s"} registrado
-                  {businesses.length === 1 ? "" : "s"} en TOCA.
+                  {summary.total} negocio
+                  {summary.total === 1 ? "" : "s"} registrado
+                  {summary.total === 1 ? "" : "s"} en TOCA.
                 </p>
               </div>
             </div>
@@ -718,6 +1282,86 @@ export default function GestionPanel() {
               <PlusIcon />
               <span>Nuevo negocio</span>
             </button>
+          </div>
+
+          {success && (
+            <div className={styles.formSuccess}>
+              <span className={styles.successCheck}>✓</span>
+              <span>{success}</span>
+            </div>
+          )}
+
+          {error && !formOpen && (
+            <div className={styles.formError}>
+              <AlertIcon />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className={styles.businessTools}>
+            <div className={styles.searchBox}>
+              <SearchIcon />
+
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
+                placeholder="Buscar por nombre o slug..."
+                aria-label="Buscar negocio"
+              />
+            </div>
+
+            <div className={styles.filterGroup}>
+              <div className={styles.filterLabel}>
+                <FilterIcon />
+                <span>Mostrar</span>
+              </div>
+
+              <div className={styles.filterButtons}>
+                <button
+                  type="button"
+                  className={
+                    statusFilter === "all"
+                      ? styles.filterButtonActive
+                      : styles.filterButton
+                  }
+                  onClick={() => setStatusFilter("all")}
+                >
+                  Todos
+                  <span>{summary.total}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    statusFilter === "active"
+                      ? styles.filterButtonActive
+                      : styles.filterButton
+                  }
+                  onClick={() => setStatusFilter("active")}
+                >
+                  Activos
+                  <span>{summary.active}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    statusFilter === "inactive"
+                      ? styles.filterButtonActive
+                      : styles.filterButton
+                  }
+                  onClick={() =>
+                    setStatusFilter("inactive")
+                  }
+                >
+                  Inactivos
+                  <span>{summary.inactive}</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {businesses.length === 0 ? (
@@ -742,69 +1386,412 @@ export default function GestionPanel() {
                 Crear negocio
               </button>
             </div>
+          ) : filteredBusinesses.length === 0 ? (
+            <div className={styles.empty}>
+              <div className={styles.emptyIcon}>
+                <SearchIcon />
+              </div>
+
+              <h3>No hay resultados</h3>
+
+              <p>
+                No hay negocios que coincidan con la búsqueda o
+                el filtro seleccionado.
+              </p>
+
+              <button
+                type="button"
+                className={styles.secondaryAction}
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                }}
+              >
+                Limpiar filtros
+              </button>
+            </div>
           ) : (
             <div className={styles.businessList}>
-              {businesses.map((business) => (
-                <article
-                  className={styles.business}
-                  key={business.id}
-                >
-                  <div className={styles.businessIdentity}>
-                    <div className={styles.businessAvatar}>
-                      {business.logoUrl ? (
-                        <Image
-                          src={business.logoUrl}
-                          alt=""
-                          width={44}
-                          height={44}
-                        />
+              {filteredBusinesses.map((business) => {
+                const stats =
+                  statsByBusiness[business.id] || {
+                    visits: 0,
+                    googleClicks: 0,
+                    lastActivity: null,
+                  };
+
+                return (
+                  <article
+                    className={`${styles.business} ${
+                      !business.active
+                        ? styles.businessInactive
+                        : ""
+                    }`}
+                    key={business.id}
+                  >
+                    <div className={styles.businessMain}>
+                      <div className={styles.businessIdentity}>
+                        <div className={styles.businessAvatar}>
+                          {business.logoUrl ? (
+                            <Image
+                              src={business.logoUrl}
+                              alt=""
+                              width={48}
+                              height={48}
+                            />
+                          ) : (
+                            <StoreIcon />
+                          )}
+                        </div>
+
+                        <div className={styles.businessInfo}>
+                          <span
+                            className={`${styles.businessStatus} ${
+                              !business.active
+                                ? styles.businessStatusInactive
+                                : ""
+                            }`}
+                          >
+                            {business.active
+                              ? "Negocio activo"
+                              : "Negocio inactivo"}
+                          </span>
+
+                          <h3>{business.name}</h3>
+
+                          <span
+                            className={styles.businessSlug}
+                          >
+                            /{business.slug}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className={styles.businessMeta}>
+                        <div>
+                          <span>Visitas</span>
+                          <strong>
+                            {formatNumber(stats.visits)}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Interacciones</span>
+                          <strong>
+                            {formatNumber(
+                              stats.googleClicks
+                            )}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Última actividad</span>
+                          <strong>
+                            {formatDate(
+                              stats.lastActivity
+                            )}
+                          </strong>
+                        </div>
+
+                        <div>
+                          <span>Creado</span>
+                          <strong>
+                            {formatCreatedDate(
+                              business.createdAt
+                            )}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.businessActions}>
+                      {business.active && (
+                        <a
+                          href={`/${business.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`${styles.actionButton} ${styles.actionPrimary}`}
+                        >
+                          <ExternalIcon />
+                          <span>Ver página</span>
+                        </a>
+                      )}
+
+                      <a
+                        href={`/estadisticas/${business.slug}`}
+                        className={styles.actionButton}
+                      >
+                        <ChartIcon />
+                        <span>Estadísticas</span>
+                      </a>
+
+                      {business.active && (
+                        <button
+                          type="button"
+                          className={styles.actionButton}
+                          onClick={() =>
+                            startEditing(business)
+                          }
+                        >
+                          <EditIcon />
+                          <span>Editar</span>
+                        </button>
+                      )}
+
+                      {business.active ? (
+                        <button
+                          type="button"
+                          className={`${styles.actionButton} ${styles.actionDanger}`}
+                          onClick={() =>
+                            deactivateBusiness(
+                              business.id,
+                              business.name
+                            )
+                          }
+                          disabled={
+                            quickDeletingId === business.id ||
+                            activatingId !== null
+                          }
+                        >
+                          <TrashIcon />
+                          <span>
+                            {quickDeletingId === business.id
+                              ? "Desactivando..."
+                              : "Desactivar"}
+                          </span>
+                        </button>
                       ) : (
-                        <StoreIcon />
+                        <button
+                          type="button"
+                          className={`${styles.actionButton} ${styles.actionReactivate}`}
+                          onClick={() =>
+                            activateBusiness(
+                              business.id,
+                              business.name
+                            )
+                          }
+                          disabled={
+                            activatingId === business.id ||
+                            quickDeletingId !== null ||
+                            deleting
+                          }
+                        >
+                          <ActivateIcon />
+                          <span>
+                            {activatingId === business.id
+                              ? "Reactivando..."
+                              : "Reactivar"}
+                          </span>
+                        </button>
                       )}
                     </div>
-
-                    <div className={styles.businessInfo}>
-                      <h3>{business.name}</h3>
-
-                      <span>
-                        /{business.slug}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className={styles.businessActions}>
-                    <a
-                      href={`/${business.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.actionButton}
-                    >
-                      <ExternalIcon />
-                      <span>Ver página</span>
-                    </a>
-
-                    <a
-                      href={`/estadisticas/${business.slug}`}
-                      className={styles.actionButton}
-                    >
-                      <ChartIcon />
-                      <span>Estadísticas</span>
-                    </a>
-
-                    <button
-                      type="button"
-                      className={styles.actionButton}
-                      onClick={() => startEditing(business)}
-                    >
-                      <EditIcon />
-                      <span>Editar</span>
-                    </button>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
+
+        {formOpen && (
+          <section className={styles.formSection}>
+            <div className={styles.sectionHeading}>
+              <div className={styles.sectionHeadingMain}>
+                <div className={styles.sectionIcon}>
+                  {editingId ? <EditIcon /> : <PlusIcon />}
+                </div>
+
+                <div>
+                  <span className={styles.sectionLabel}>
+                    {editingId
+                      ? "Configuración"
+                      : "Nuevo registro"}
+                  </span>
+
+                  <h2>
+                    {editingId
+                      ? "Editar negocio"
+                      : "Añadir negocio"}
+                  </h2>
+
+                  <p>
+                    {editingId
+                      ? "Modifica los datos asociados a este negocio."
+                      : "Crea una nueva página para un negocio de TOCA."}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className={styles.cancelButton}
+                onClick={closeForm}
+                disabled={saving || deleting}
+              >
+                Cancelar
+              </button>
+            </div>
+
+            <form
+              className={styles.form}
+              onSubmit={handleSubmit}
+            >
+              <div className={styles.formGrid}>
+                <div className={styles.field}>
+                  <label htmlFor="business-name">
+                    Nombre del negocio
+                  </label>
+
+                  <input
+                    id="business-name"
+                    type="text"
+                    value={form.name}
+                    onChange={(event) =>
+                      handleNameChange(event.target.value)
+                    }
+                    placeholder="Ej. Bar Pepe"
+                    required
+                  />
+                </div>
+
+                <div className={styles.field}>
+                  <label htmlFor="business-slug">
+                    Slug
+                  </label>
+
+                  <input
+                    id="business-slug"
+                    type="text"
+                    value={form.slug}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        slug: createSlug(
+                          event.target.value
+                        ),
+                      }))
+                    }
+                    placeholder="bar-pepe"
+                    required
+                  />
+
+                  <span className={styles.help}>
+                    URL pública:{" "}
+                    <strong>
+                      /{form.slug || "..."}
+                    </strong>
+                  </span>
+                </div>
+
+                <div className={styles.fieldFull}>
+                  <label htmlFor="google-review-url">
+                    URL de reseñas de Google
+                  </label>
+
+                  <input
+                    id="google-review-url"
+                    type="url"
+                    value={form.googleReviewUrl}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        googleReviewUrl:
+                          event.target.value,
+                      }))
+                    }
+                    placeholder="https://g.page/r/..."
+                    required
+                  />
+
+                  <span className={styles.help}>
+                    Enlace al formulario de reseña del negocio
+                    en Google.
+                  </span>
+                </div>
+
+                <div className={styles.fieldFull}>
+                  <label htmlFor="logo-url">
+                    URL del logo
+                    <span className={styles.optional}>
+                      {" "}
+                      · opcional
+                    </span>
+                  </label>
+
+                  <input
+                    id="logo-url"
+                    type="url"
+                    value={form.logoUrl}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        logoUrl: event.target.value,
+                      }))
+                    }
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <div className={styles.formError}>
+                  <AlertIcon />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {editingId && (
+                <div className={styles.dangerZone}>
+                  <div className={styles.dangerText}>
+                    <strong>Zona de peligro</strong>
+
+                    <span>
+                      Desactiva este negocio y retira su página
+                      pública. Sus estadísticas se conservarán.
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={saving || deleting}
+                    className={styles.deleteButton}
+                  >
+                    <TrashIcon />
+
+                    {deleting
+                      ? "Desactivando..."
+                      : "Desactivar negocio"}
+                  </button>
+                </div>
+              )}
+
+              <div className={styles.formActions}>
+                <button
+                  type="button"
+                  className={styles.cancelFormButton}
+                  onClick={closeForm}
+                  disabled={saving || deleting}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  className={styles.primaryButton}
+                  disabled={saving || deleting}
+                >
+                  {saving
+                    ? "Guardando..."
+                    : editingId
+                      ? "Guardar cambios"
+                      : "Crear negocio"}
+
+                  {!saving && !deleting && <ArrowIcon />}
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
 
         <footer className={styles.footer}>
           <Image
@@ -817,6 +1804,56 @@ export default function GestionPanel() {
           <p>Todo tu negocio. En un toque.</p>
         </footer>
       </div>
+
+      {logoutConfirmOpen && (
+        <div
+          className={styles.logoutModalOverlay}
+          role="presentation"
+        >
+          <div
+            className={styles.logoutModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-modal-title"
+            aria-describedby="logout-modal-description"
+          >
+            <div className={styles.logoutModalIcon}>
+              <LockIcon />
+            </div>
+
+            <span className={styles.logoutModalLabel}>
+              Cerrar sesión
+            </span>
+
+            <h2 id="logout-modal-title">
+              ¿Quieres cerrar sesión?
+            </h2>
+
+            <p id="logout-modal-description">
+              Tendrás que volver a introducir la contraseña
+              para acceder al panel de gestión de TOCA.
+            </p>
+
+            <div className={styles.logoutModalActions}>
+              <button
+                type="button"
+                className={styles.logoutCancelButton}
+                onClick={() => setLogoutConfirmOpen(false)}
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                className={styles.logoutConfirmButton}
+                onClick={handleLogout}
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

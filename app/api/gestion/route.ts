@@ -1,7 +1,11 @@
+import { env } from "cloudflare:workers";
+
 import { isAuthenticated } from "@/lib/analyticsAuth";
 import {
+  activateBusiness,
   createBusiness,
-  getAllBusinesses,
+  deactivateBusiness,
+  getAllBusinessesForManagement,
   updateBusiness,
 } from "@/lib/businesses";
 
@@ -75,18 +79,6 @@ function validateBusinessData(body: BusinessBody) {
   };
 }
 
-type BusinessApiResponse = {
-  businesses?: Awaited<ReturnType<typeof getAllBusinesses>>;
-  business?: Awaited<ReturnType<typeof createBusiness>>;
-  error?: string;
-};
-
-async function readResponse(
-  response: Response
-): Promise<BusinessApiResponse> {
-  return (await response.json()) as BusinessApiResponse;
-}
-
 export async function GET(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(
@@ -100,15 +92,101 @@ export async function GET(request: Request) {
   }
 
   try {
-    const businesses = await getAllBusinesses();
+    const businesses = await getAllBusinessesForManagement();
+
+    const totalsResult = await env.toca_analytics
+      .prepare(`
+        SELECT
+          COALESCE(SUM(visits), 0) AS visits,
+          COALESCE(SUM(google_clicks), 0) AS google_clicks,
+          MAX(last_activity) AS last_activity
+        FROM analytics_daily
+      `)
+      .first();
+
+    const businessStatsResult = await env.toca_analytics
+      .prepare(`
+        SELECT
+          business_id,
+          COALESCE(SUM(visits), 0) AS visits,
+          COALESCE(SUM(google_clicks), 0) AS google_clicks,
+          MAX(last_activity) AS last_activity
+        FROM analytics_daily
+        GROUP BY business_id
+      `)
+      .all();
+
+    const dailyResult = await env.toca_analytics
+      .prepare(`
+        SELECT
+          date,
+          COALESCE(SUM(visits), 0) AS visits,
+          COALESCE(SUM(google_clicks), 0) AS google_clicks
+        FROM analytics_daily
+        GROUP BY date
+        ORDER BY date DESC
+        LIMIT 14
+      `)
+      .all();
+
+    const statsByBusiness: Record<
+      string,
+      {
+        visits: number;
+        googleClicks: number;
+        lastActivity: string | null;
+      }
+    > = {};
+
+    for (const row of businessStatsResult.results) {
+      const businessId = String(row.business_id);
+
+      statsByBusiness[businessId] = {
+        visits: Number(row.visits) || 0,
+        googleClicks: Number(row.google_clicks) || 0,
+        lastActivity: row.last_activity
+          ? String(row.last_activity)
+          : null,
+      };
+    }
+
+    const daily = dailyResult.results
+      .map((row) => ({
+        date: String(row.date),
+        visits: Number(row.visits) || 0,
+        googleClicks: Number(row.google_clicks) || 0,
+      }))
+      .reverse();
+
+    const active = businesses.filter(
+      (business) => business.active
+    ).length;
+
+    const inactive = businesses.length - active;
+
+    const visits = Number(totalsResult?.visits) || 0;
+    const googleClicks =
+      Number(totalsResult?.google_clicks) || 0;
 
     return Response.json({
       businesses,
+      summary: {
+        active,
+        inactive,
+        total: businesses.length,
+        visits,
+        googleClicks,
+        lastActivity: totalsResult?.last_activity
+          ? String(totalsResult.last_activity)
+          : null,
+      },
+      statsByBusiness,
+      daily,
     });
   } catch {
     return Response.json(
       {
-        error: "No se pudieron obtener los negocios.",
+        error: "No se pudieron obtener los datos de gestión.",
       },
       {
         status: 500,
@@ -228,7 +306,7 @@ export async function PUT(request: Request) {
     if (!business) {
       return Response.json(
         {
-          error: "El negocio no existe.",
+          error: "El negocio no existe o está inactivo.",
         },
         {
           status: 404,
@@ -257,6 +335,135 @@ export async function PUT(request: Request) {
     return Response.json(
       {
         error: "No se pudo actualizar el negocio.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!(await isAuthenticated(request))) {
+    return Response.json(
+      {
+        error: "No autorizado.",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
+  try {
+    const body = (await request.json()) as {
+      id?: string;
+    };
+
+    const id = body.id?.trim();
+
+    if (!id) {
+      return Response.json(
+        {
+          error: "Falta el ID del negocio.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const deactivated = await deactivateBusiness(id);
+
+    if (!deactivated) {
+      return Response.json(
+        {
+          error: "El negocio no existe o ya está eliminado.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    return Response.json({
+      success: true,
+    });
+  } catch {
+    return Response.json(
+      {
+        error: "No se pudo eliminar el negocio.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  if (!(await isAuthenticated(request))) {
+    return Response.json(
+      {
+        error: "No autorizado.",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
+  try {
+    const body = (await request.json()) as {
+      id?: string;
+      action?: string;
+    };
+
+    const id = body.id?.trim();
+
+    if (!id) {
+      return Response.json(
+        {
+          error: "Falta el ID del negocio.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    if (body.action !== "activate") {
+      return Response.json(
+        {
+          error: "Acción no válida.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const activated = await activateBusiness(id);
+
+    if (!activated) {
+      return Response.json(
+        {
+          error:
+            "El negocio no existe o ya está activo.",
+        },
+        {
+          status: 404,
+        }
+      );
+    }
+
+    return Response.json({
+      success: true,
+    });
+  } catch {
+    return Response.json(
+      {
+        error: "No se pudo reactivar el negocio.",
       },
       {
         status: 500,

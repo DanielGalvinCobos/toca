@@ -1,5 +1,6 @@
 import {
   createLoginResponse,
+  createLogoutResponse,
   createSessionToken,
   isAuthenticated,
   verifyPassword,
@@ -47,7 +48,8 @@ export async function POST(request: Request) {
 
     const token = await createSessionToken();
 
-    const secure = new URL(request.url).protocol === "https:";
+    const secure =
+      new URL(request.url).protocol === "https:";
 
     return createLoginResponse(token, secure);
   } catch {
@@ -60,4 +62,11 @@ export async function POST(request: Request) {
       }
     );
   }
+}
+
+export async function DELETE(request: Request) {
+  const secure =
+    new URL(request.url).protocol === "https:";
+
+  return createLogoutResponse(secure);
 }

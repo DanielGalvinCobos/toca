@@ -30,7 +30,10 @@ function base64UrlDecode(value: string) {
   const padded = value
     .replace(/-/g, "+")
     .replace(/_/g, "/")
-    .padEnd(value.length + ((4 - (value.length % 4)) % 4), "=");
+    .padEnd(
+      value.length + ((4 - (value.length % 4)) % 4),
+      "="
+    );
 
   const binary = atob(padded);
 
@@ -138,7 +141,9 @@ export async function isAuthenticated(request: Request) {
   const expectedSignature =
     await createSignature(encodedPayload);
 
-  if (!(await safeCompare(signature, expectedSignature))) {
+  if (
+    !(await safeCompare(signature, expectedSignature))
+  ) {
     return false;
   }
 
@@ -174,6 +179,32 @@ export function createLoginResponse(
     "HttpOnly",
     "SameSite=Lax",
     `Max-Age=${SESSION_DURATION}`,
+  ];
+
+  if (secure) {
+    cookieParts.push("Secure");
+  }
+
+  return Response.json(
+    {
+      success: true,
+    },
+    {
+      headers: {
+        "Set-Cookie": cookieParts.join("; "),
+      },
+    }
+  );
+}
+
+export function createLogoutResponse(secure: boolean) {
+  const cookieParts = [
+    "toca_analytics_session=",
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax",
+    "Max-Age=0",
+    "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
   ];
 
   if (secure) {

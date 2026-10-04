@@ -7,6 +7,7 @@ export type Business = {
   googleReviewUrl: string;
   logoUrl?: string;
   createdAt: string;
+  active: boolean;
 };
 
 function mapBusiness(row: Record<string, unknown>): Business {
@@ -19,6 +20,7 @@ function mapBusiness(row: Record<string, unknown>): Business {
       ? String(row.logo_url)
       : undefined,
     createdAt: String(row.created_at),
+    active: Number(row.active) === 1,
   };
 }
 
@@ -42,7 +44,36 @@ export async function getBusinessBySlug(
         slug,
         google_review_url,
         logo_url,
-        created_at
+        created_at,
+        active
+      FROM businesses
+      WHERE slug = ?
+        AND active = 1
+      LIMIT 1
+    `)
+    .bind(slug)
+    .first();
+
+  if (!result) {
+    return undefined;
+  }
+
+  return mapBusiness(result as Record<string, unknown>);
+}
+
+export async function getBusinessBySlugIncludingInactive(
+  slug: string
+): Promise<Business | undefined> {
+  const result = await env.toca_analytics
+    .prepare(`
+      SELECT
+        id,
+        name,
+        slug,
+        google_review_url,
+        logo_url,
+        created_at,
+        active
       FROM businesses
       WHERE slug = ?
       LIMIT 1
@@ -68,7 +99,8 @@ export async function getBusinessById(
         slug,
         google_review_url,
         logo_url,
-        created_at
+        created_at,
+        active
       FROM businesses
       WHERE id = ?
       LIMIT 1
@@ -92,9 +124,36 @@ export async function getAllBusinesses(): Promise<Business[]> {
         slug,
         google_review_url,
         logo_url,
-        created_at
+        created_at,
+        active
       FROM businesses
+      WHERE active = 1
       ORDER BY name ASC
+    `)
+    .all();
+
+  return result.results.map((row) =>
+    mapBusiness(row as Record<string, unknown>)
+  );
+}
+
+/**
+ * Devuelve todos los negocios para el panel privado de gestión,
+ * incluidos los que están desactivados.
+ */
+export async function getAllBusinessesForManagement(): Promise<Business[]> {
+  const result = await env.toca_analytics
+    .prepare(`
+      SELECT
+        id,
+        name,
+        slug,
+        google_review_url,
+        logo_url,
+        created_at,
+        active
+      FROM businesses
+      ORDER BY active DESC, name ASC
     `)
     .all();
 
@@ -120,9 +179,10 @@ export async function createBusiness(data: {
         slug,
         google_review_url,
         logo_url,
-        created_at
+        created_at,
+        active
       )
-      VALUES (?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
     `)
     .bind(
       id,
@@ -141,6 +201,7 @@ export async function createBusiness(data: {
     googleReviewUrl: data.googleReviewUrl,
     logoUrl: data.logoUrl || undefined,
     createdAt,
+    active: true,
   };
 }
 
@@ -160,13 +221,15 @@ export async function updateBusiness(data: {
         google_review_url = ?,
         logo_url = ?
       WHERE id = ?
+        AND active = 1
       RETURNING
         id,
         name,
         slug,
         google_review_url,
         logo_url,
-        created_at
+        created_at,
+        active
     `)
     .bind(
       data.name,
@@ -182,4 +245,36 @@ export async function updateBusiness(data: {
   }
 
   return mapBusiness(result as Record<string, unknown>);
+}
+
+export async function deactivateBusiness(
+  id: string
+): Promise<boolean> {
+  const result = await env.toca_analytics
+    .prepare(`
+      UPDATE businesses
+      SET active = 0
+      WHERE id = ?
+        AND active = 1
+    `)
+    .bind(id)
+    .run();
+
+  return result.meta.changes > 0;
+}
+
+export async function activateBusiness(
+  id: string
+): Promise<boolean> {
+  const result = await env.toca_analytics
+    .prepare(`
+      UPDATE businesses
+      SET active = 1
+      WHERE id = ?
+        AND active = 0
+    `)
+    .bind(id)
+    .run();
+
+  return result.meta.changes > 0;
 }

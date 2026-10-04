@@ -1,0 +1,26 @@
+{
+  "name": "TOCA",
+  "short_name": "TOCA",
+  "id": "/gestion",
+  "description": "Panel privado de gestión de TOCA.",
+  "start_url": "/gestion",
+  "scope": "/gestion",
+  "display": "standalone",
+  "background_color": "#f7f7ff",
+  "theme_color": "#6366F1",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icons/toca-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/toca-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
