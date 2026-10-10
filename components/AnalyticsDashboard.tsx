@@ -70,6 +70,26 @@ function formatDate(date: string) {
   return `${day}/${month}/${year}`;
 }
 
+function formatFileDate(date: string) {
+  const [year, month, day] = date.split("-");
+
+  return `${day}-${month}-${year}`;
+}
+
+function sanitizeFileName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function formatShortDate(date: string) {
+  const [, month, day] = date.split("-");
+
+  return `${day}/${month}`;
+}
+
 function formatDateTime(date: string | null) {
   if (!date) {
     return "Sin actividad";
@@ -95,9 +115,7 @@ function getMadridToday() {
 function addDays(dateString: string, amount: number) {
   const [year, month, day] = dateString.split("-").map(Number);
 
-  const date = new Date(
-    Date.UTC(year, month - 1, day)
-  );
+  const date = new Date(Date.UTC(year, month - 1, day));
 
   date.setUTCDate(date.getUTCDate() + amount);
 
@@ -107,9 +125,7 @@ function addDays(dateString: string, amount: number) {
 function getMonday(dateString: string) {
   const [year, month, day] = dateString.split("-").map(Number);
 
-  const date = new Date(
-    Date.UTC(year, month - 1, day)
-  );
+  const date = new Date(Date.UTC(year, month - 1, day));
 
   const dayOfWeek = date.getUTCDay();
   const daysSinceMonday =
@@ -258,7 +274,9 @@ function getPeriod(
   };
 }
 
-function getSourceLabel(source: "nfc" | "qr" | "direct") {
+function getSourceLabel(
+  source: "nfc" | "qr" | "direct"
+) {
   if (source === "nfc") {
     return "NFC";
   }
@@ -268,6 +286,17 @@ function getSourceLabel(source: "nfc" | "qr" | "direct") {
   }
 
   return "Directo";
+}
+
+function getSourcePercentage(
+  visits: number,
+  total: number
+) {
+  if (total <= 0) {
+    return 0;
+  }
+
+  return Math.round((visits / total) * 100);
 }
 
 function NfcSourceIcon() {
@@ -545,14 +574,16 @@ export default function AnalyticsDashboard({
   businessName,
   businessSlug,
 }: AnalyticsDashboardProps) {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(
-    null
-  );
+  const [authenticated, setAuthenticated] =
+    useState<boolean | null>(null);
+
   const [password, setPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
 
-  const [data, setData] = useState<AnalyticsData | null>(null);
+  const [data, setData] =
+    useState<AnalyticsData | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -562,21 +593,54 @@ export default function AnalyticsDashboard({
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
 
+
+  function handlePrint() {
+    const originalTitle = document.title;
+
+    const fileName = [
+      "TOCA",
+      sanitizeFileName(businessName),
+      formatFileDate(selectedPeriod.from),
+      formatFileDate(selectedPeriod.to),
+    ].join("_");
+
+    const restoreTitle = () => {
+      document.title = originalTitle;
+      window.removeEventListener(
+        "afterprint",
+        restoreTitle
+      );
+    };
+
+    document.title = fileName;
+
+    window.addEventListener(
+      "afterprint",
+      restoreTitle
+    );
+
+    window.print();
+  }
+
   useEffect(() => {
     async function checkAuthentication() {
       try {
-        const response = await fetch("/api/analytics/auth", {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          "/api/analytics/auth",
+          {
+            cache: "no-store",
+          }
+        );
 
         if (!response.ok) {
           setAuthenticated(false);
           return;
         }
 
-        const result = (await response.json()) as {
-          authenticated: boolean;
-        };
+        const result =
+          (await response.json()) as {
+            authenticated: boolean;
+          };
 
         setAuthenticated(result.authenticated);
       } catch {
@@ -612,7 +676,8 @@ export default function AnalyticsDashboard({
           );
         }
 
-        const result = (await response.json()) as AnalyticsData;
+        const result =
+          (await response.json()) as AnalyticsData;
 
         setData(result);
       } catch {
@@ -639,20 +704,24 @@ export default function AnalyticsDashboard({
     setLoginError("");
 
     try {
-      const response = await fetch("/api/analytics/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          password,
-        }),
-      });
+      const response = await fetch(
+        "/api/analytics/auth",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password,
+          }),
+        }
+      );
 
       if (!response.ok) {
-        const result = (await response.json()) as {
-          error?: string;
-        };
+        const result =
+          (await response.json()) as {
+            error?: string;
+          };
 
         setLoginError(
           result.error || "Contraseña incorrecta."
@@ -678,7 +747,8 @@ export default function AnalyticsDashboard({
         periodType,
         customFrom,
         customTo,
-        data?.businessCreatedAt || getMadridToday()
+        data?.businessCreatedAt ||
+        getMadridToday()
       ),
     [
       periodType,
@@ -745,6 +815,7 @@ export default function AnalyticsDashboard({
       googleClicks += rowGoogleClicks;
 
       bySource[row.source].visits += rowVisits;
+
       bySource[row.source].googleClicks +=
         rowGoogleClicks;
 
@@ -788,31 +859,156 @@ export default function AnalyticsDashboard({
       const current = grouped.get(row.date);
 
       if (current) {
-        current.visits += row.visits;
-        current.googleClicks += row.google_clicks;
+        current.visits += Number(row.visits);
+        current.googleClicks += Number(
+          row.google_clicks
+        );
       } else {
         grouped.set(row.date, {
           date: row.date,
-          visits: row.visits,
-          googleClicks: row.google_clicks,
+          visits: Number(row.visits),
+          googleClicks: Number(
+            row.google_clicks
+          ),
         });
       }
     }
 
-    return Array.from(grouped.values());
+    return Array.from(grouped.values()).sort(
+      (a, b) => a.date.localeCompare(b.date)
+    );
   }, [periodRows]);
 
-  const maxVisits = Math.max(
-    ...chartData.map((item) => item.visits),
-    1
-  );
+  /*
+   * Gráfico de línea:
+   * - Mantiene un ancho interno fijo para que los puntos
+   *   estén correctamente distribuidos.
+   * - El SVG se adapta al ancho disponible.
+   * - Las etiquetas se reducen automáticamente cuando
+   *   aumenta el número de días.
+   */
+  const chartGeometry = useMemo(() => {
+    const width = 1000;
+    const height = 280;
+
+    const paddingLeft = 44;
+    const paddingRight = 22;
+    const paddingTop = 20;
+    const paddingBottom = 38;
+
+    const innerWidth =
+      width - paddingLeft - paddingRight;
+
+    const innerHeight =
+      height - paddingTop - paddingBottom;
+
+    const maxVisits = Math.max(
+      ...chartData.map((item) => item.visits),
+      1
+    );
+
+    const getX = (index: number) => {
+      if (chartData.length <= 1) {
+        return width / 2;
+      }
+
+      return (
+        paddingLeft +
+        (index / (chartData.length - 1)) *
+        innerWidth
+      );
+    };
+
+    const getY = (value: number) => {
+      return (
+        paddingTop +
+        innerHeight -
+        (value / maxVisits) * innerHeight
+      );
+    };
+
+    const points = chartData.map(
+      (item, index) => ({
+        ...item,
+        x: getX(index),
+        y: getY(item.visits),
+      })
+    );
+
+    const linePath =
+      points.length === 0
+        ? ""
+        : points
+          .map(
+            (point, index) =>
+              `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`
+          )
+          .join(" ");
+
+    const areaPath =
+      points.length === 0
+        ? ""
+        : `${linePath} L ${points[points.length - 1].x
+        } ${paddingTop + innerHeight
+        } L ${points[0].x} ${paddingTop + innerHeight
+        } Z`;
+
+    let labelStep = 1;
+
+    if (chartData.length <= 7) {
+      labelStep = 1;
+    } else if (chartData.length <= 14) {
+      labelStep = 2;
+    } else if (chartData.length <= 31) {
+      labelStep = 5;
+    } else if (chartData.length <= 60) {
+      labelStep = 7;
+    } else if (chartData.length <= 90) {
+      labelStep = 10;
+    } else {
+      labelStep = Math.ceil(
+        chartData.length / 9
+      );
+    }
+
+    const labels = points.filter(
+      (_, index) =>
+        index === 0 ||
+        index === points.length - 1 ||
+        index % labelStep === 0
+    );
+
+    return {
+      width,
+      height,
+      paddingLeft,
+      paddingRight,
+      paddingTop,
+      paddingBottom,
+      innerHeight,
+      maxVisits,
+      points,
+      linePath,
+      areaPath,
+      labels,
+    };
+  }, [chartData]);
 
   if (authenticated === null) {
     return (
       <main className={styles.analyticsPage}>
-        <div className={styles.analyticsContainer}>
-          <div className={styles.analyticsLoading}>
-            <div className={styles.analyticsLoadingSpinner} />
+        <div
+          className={styles.analyticsContainer}
+        >
+          <div
+            className={styles.analyticsLoading}
+          >
+            <div
+              className={
+                styles.analyticsLoadingSpinner
+              }
+            />
+
             <p>Comprobando acceso...</p>
           </div>
         </div>
@@ -825,10 +1021,20 @@ export default function AnalyticsDashboard({
       <main
         className={`${styles.analyticsPage} ${styles.analyticsLoginPage}`}
       >
-        <div className={styles.analyticsLoginBackground} />
+        <div
+          className={
+            styles.analyticsLoginBackground
+          }
+        />
 
-        <div className={styles.analyticsLoginContainer}>
-          <div className={styles.analyticsLoginLogo}>
+        <div
+          className={
+            styles.analyticsLoginContainer
+          }
+        >
+          <div
+            className={styles.analyticsLoginLogo}
+          >
             <Image
               src="/logo/toca.svg"
               alt="TOCA"
@@ -838,7 +1044,9 @@ export default function AnalyticsDashboard({
             />
           </div>
 
-          <section className={styles.analyticsLoginCard}>
+          <section
+            className={styles.analyticsLoginCard}
+          >
             <div
               className={styles.analyticsLoginIcon}
               aria-hidden="true"
@@ -875,18 +1083,31 @@ export default function AnalyticsDashboard({
               </svg>
             </div>
 
-            <span className={styles.analyticsLoginLabel}>
+            <span
+              className={
+                styles.analyticsLoginLabel
+              }
+            >
               Acceso privado
             </span>
 
             <h1>Estadísticas</h1>
 
-            <p className={styles.analyticsLoginBusiness}>
+            <p
+              className={
+                styles.analyticsLoginBusiness
+              }
+            >
               {businessName}
             </p>
 
-            <p className={styles.analyticsLoginDescription}>
-              Accede al panel de estadísticas de tu negocio.
+            <p
+              className={
+                styles.analyticsLoginDescription
+              }
+            >
+              Accede al panel de estadísticas de tu
+              negocio.
             </p>
 
             <form
@@ -912,7 +1133,9 @@ export default function AnalyticsDashboard({
 
               {loginError && (
                 <div
-                  className={styles.analyticsLoginError}
+                  className={
+                    styles.analyticsLoginError
+                  }
                   aria-live="polite"
                 >
                   <span aria-hidden="true">!</span>
@@ -922,7 +1145,9 @@ export default function AnalyticsDashboard({
 
               <button
                 type="submit"
-                className={styles.analyticsLoginButton}
+                className={
+                  styles.analyticsLoginButton
+                }
                 disabled={loggingIn}
               >
                 <span>
@@ -937,10 +1162,17 @@ export default function AnalyticsDashboard({
               </button>
             </form>
 
-            <div className={styles.analyticsLoginFooter}>
+            <div
+              className={
+                styles.analyticsLoginFooter
+              }
+            >
               <span
-                className={styles.analyticsLoginFooterDot}
+                className={
+                  styles.analyticsLoginFooterDot
+                }
               />
+
               Acceso exclusivo de TOCA
             </div>
           </section>
@@ -952,9 +1184,18 @@ export default function AnalyticsDashboard({
   if (loading) {
     return (
       <main className={styles.analyticsPage}>
-        <div className={styles.analyticsContainer}>
-          <div className={styles.analyticsLoading}>
-            <div className={styles.analyticsLoadingSpinner} />
+        <div
+          className={styles.analyticsContainer}
+        >
+          <div
+            className={styles.analyticsLoading}
+          >
+            <div
+              className={
+                styles.analyticsLoadingSpinner
+              }
+            />
+
             <p>Cargando estadísticas...</p>
           </div>
         </div>
@@ -965,9 +1206,15 @@ export default function AnalyticsDashboard({
   if (error || !data) {
     return (
       <main className={styles.analyticsPage}>
-        <div className={styles.analyticsContainer}>
-          <header className={styles.analyticsHeader}>
-            <div className={styles.analyticsBrand}>
+        <div
+          className={styles.analyticsContainer}
+        >
+          <header
+            className={styles.analyticsHeader}
+          >
+            <div
+              className={styles.analyticsBrand}
+            >
               <Image
                 src="/logo/toca.svg"
                 alt="TOCA"
@@ -977,28 +1224,42 @@ export default function AnalyticsDashboard({
               />
             </div>
 
-            <div className={styles.analyticsHeaderContent}>
+            <div
+              className={
+                styles.analyticsHeaderContent
+              }
+            >
               <div>
-                <span className={styles.analyticsEyebrow}>
+                <span
+                  className={
+                    styles.analyticsEyebrow
+                  }
+                >
                   Estadísticas
                 </span>
 
                 <h1>{businessName}</h1>
 
                 <p>
-                  Evolución de los accesos e interacciones de este
-                  local.
+                  Evolución de los accesos e
+                  interacciones de este local.
                 </p>
               </div>
 
-              <div className={styles.analyticsActions}>
+              <div
+                className={styles.analyticsActions}
+              >
                 <button
-                  className={styles.analyticsPrintButton}
+                  className={
+                    styles.analyticsPrintButton
+                  }
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={handlePrint}
                 >
                   <span
-                    className={styles.analyticsPrintIcon}
+                    className={
+                      styles.analyticsPrintIcon
+                    }
                     aria-hidden="true"
                   >
                     ↓
@@ -1012,20 +1273,26 @@ export default function AnalyticsDashboard({
                   href={`/${businessSlug}`}
                 >
                   Ver página
-                  <span aria-hidden="true">→</span>
+                  <span aria-hidden="true">
+                    →
+                  </span>
                 </a>
               </div>
             </div>
           </header>
 
-          <div className={styles.analyticsError}>
+          <div
+            className={styles.analyticsError}
+          >
             <h2>
-              No se han podido cargar las estadísticas
+              No se han podido cargar las
+              estadísticas
             </h2>
 
             <p>
-              Comprueba que el servicio de estadísticas está
-              disponible e inténtalo de nuevo.
+              Comprueba que el servicio de
+              estadísticas está disponible e
+              inténtalo de nuevo.
             </p>
           </div>
         </div>
@@ -1035,528 +1302,878 @@ export default function AnalyticsDashboard({
 
   return (
     <main className={styles.analyticsPage}>
-      <div className={styles.analyticsContainer}>
-        <header className={styles.analyticsHeader}>
-          <div className={styles.analyticsBrand}>
-            <Image
-              src="/logo/toca.svg"
-              alt="TOCA"
-              width={95}
-              height={36}
-              priority
-            />
+      <div
+        className={styles.analyticsContainer}
+      >
+        {/* =========================
+            PÁGINA 1 PDF
+            ========================= */}
 
-            <div>
-              <span className={styles.analyticsEyebrow}>
-                Estadísticas
-              </span>
-
-              <h1>{businessName}</h1>
-
-              <p>
-                Evolución de los accesos e interacciones de este
-                local.
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.analyticsActions}>
-            <button
-              className={styles.analyticsPrintButton}
-              type="button"
-              onClick={() => window.print()}
-            >
-              <span
-                className={styles.analyticsPrintIcon}
-                aria-hidden="true"
-              >
-                ↓
-              </span>
-
-              <span>Guardar PDF</span>
-            </button>
-
-            <a
-              className={styles.analyticsBack}
-              href={`/${businessSlug}`}
-            >
-              Ver página
-              <span aria-hidden="true">→</span>
-            </a>
-          </div>
-        </header>
-
-        <section
-          className={styles.analyticsSection}
-          style={{
-            marginBottom: "28px",
-          }}
+        <div
+          className={
+            styles.analyticsPrintPageOne
+          }
         >
-          <div
-            className={styles.analyticsSectionHeading}
+          <header
+            className={styles.analyticsHeader}
+          >
+            <div
+              className={styles.analyticsBrand}
+            >
+              <Image
+                src="/logo/toca.svg"
+                alt="TOCA"
+                width={95}
+                height={36}
+                priority
+              />
+
+              <div>
+                <span
+                  className={
+                    styles.analyticsEyebrow
+                  }
+                >
+                  Estadísticas
+                </span>
+
+                <h1>{businessName}</h1>
+
+                <p>
+                  Evolución de los accesos e
+                  interacciones de este local.
+                </p>
+              </div>
+            </div>
+
+            <div
+              className={styles.analyticsActions}
+            >
+              <button
+                className={
+                  styles.analyticsPrintButton
+                }
+                type="button"
+                onClick={handlePrint}
+              >
+                <span
+                  className={
+                    styles.analyticsPrintIcon
+                  }
+                  aria-hidden="true"
+                >
+                  ↓
+                </span>
+
+                <span>Guardar PDF</span>
+              </button>
+
+              <a
+                className={styles.analyticsBack}
+                href={`/${businessSlug}`}
+              >
+                Ver página
+                <span aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </div>
+          </header>
+
+          <section
+            className={`${styles.analyticsSection} ${styles.analyticsPeriodSection}`}
             style={{
-              alignItems: "flex-start",
-              gap: "20px",
+              marginBottom: "28px",
             }}
           >
-            <div>
-              <span className={styles.analyticsSectionLabel}>
-                Periodo
-              </span>
-
-              <h2>{selectedPeriod.label}</h2>
-
-              <p
-                style={{
-                  margin: "6px 0 0",
-                  color: "#6b7280",
-                  fontSize: "0.9rem",
-                }}
-              >
-                {formatDate(selectedPeriod.from)} —{" "}
-                {formatDate(selectedPeriod.to)}
-              </p>
-            </div>
-
             <div
+              className={
+                styles.analyticsSectionHeading
+              }
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-end",
-                gap: "10px",
+                alignItems: "flex-start",
+                gap: "20px",
               }}
             >
-              <select
-                className={styles.analyticsPeriod}
-                value={periodType}
-                onChange={(event) =>
-                  setPeriodType(
-                    event.target.value as PeriodType
-                  )
-                }
-                aria-label="Periodo de estadísticas"
-                style={{
-                  border: "1px solid #e5e7eb",
-                  background: "#ffffff",
-                  color: "#374151",
-                  borderRadius: "10px",
-                  padding: "9px 34px 9px 12px",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  outline: "none",
-                }}
-              >
-                <option value="today">Hoy</option>
-                <option value="yesterday">Ayer</option>
-                <option value="last7">
-                  Últimos 7 días
-                </option>
-                <option value="last14">
-                  Últimos 14 días
-                </option>
-                <option value="last30">
-                  Últimos 30 días
-                </option>
-                <option value="thisWeek">
-                  Esta semana
-                </option>
-                <option value="previousWeek">
-                  Semana anterior
-                </option>
-                <option value="thisMonth">
-                  Este mes
-                </option>
-                <option value="previousMonth">
-                  Mes anterior
-                </option>
-                <option value="custom">
-                  Periodo personalizado
-                </option>
-                <option value="all">
-                  Histórico
-                </option>
-              </select>
+              <div>
+                <span
+                  className={
+                    styles.analyticsSectionLabel
+                  }
+                >
+                  Periodo
+                </span>
 
-              {periodType === "custom" && (
-                <div
+                <h2>
+                  {selectedPeriod.label}
+                </h2>
+
+                <p
                   style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    justifyContent: "flex-end",
+                    margin: "6px 0 0",
+                    color: "#6b7280",
+                    fontSize: "0.9rem",
                   }}
                 >
-                  <label
+                  {formatDate(
+                    selectedPeriod.from
+                  )}{" "}
+                  —{" "}
+                  {formatDate(
+                    selectedPeriod.to
+                  )}
+                </p>
+              </div>
+
+              <div
+                className={
+                  styles.analyticsPeriodControls
+                }
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-end",
+                  gap: "10px",
+                }}
+              >
+                <select
+                  className={
+                    styles.analyticsPeriod
+                  }
+                  value={periodType}
+                  onChange={(event) =>
+                    setPeriodType(
+                      event.target
+                        .value as PeriodType
+                    )
+                  }
+                  aria-label="Periodo de estadísticas"
+                  style={{
+                    border:
+                      "1px solid #e5e7eb",
+                    background: "#ffffff",
+                    color: "#374151",
+                    borderRadius: "10px",
+                    padding:
+                      "9px 34px 9px 12px",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    outline: "none",
+                  }}
+                >
+                  <option value="today">
+                    Hoy
+                  </option>
+
+                  <option value="yesterday">
+                    Ayer
+                  </option>
+
+                  <option value="last7">
+                    Últimos 7 días
+                  </option>
+
+                  <option value="last14">
+                    Últimos 14 días
+                  </option>
+
+                  <option value="last30">
+                    Últimos 30 días
+                  </option>
+
+                  <option value="thisWeek">
+                    Esta semana
+                  </option>
+
+                  <option value="previousWeek">
+                    Semana anterior
+                  </option>
+
+                  <option value="thisMonth">
+                    Este mes
+                  </option>
+
+                  <option value="previousMonth">
+                    Mes anterior
+                  </option>
+
+                  <option value="custom">
+                    Periodo personalizado
+                  </option>
+
+                  <option value="all">
+                    Histórico
+                  </option>
+                </select>
+
+                {periodType === "custom" && (
+                  <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontSize: "0.82rem",
-                      color: "#6b7280",
+                      gap: "8px",
+                      flexWrap: "wrap",
+                      justifyContent:
+                        "flex-end",
                     }}
                   >
-                    Desde
-                    <input
-                      type="date"
-                      value={customFrom}
-                      onChange={(event) =>
-                        setCustomFrom(event.target.value)
-                      }
+                    <label
                       style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "7px 9px",
-                        background: "#ffffff",
-                        color: "#374151",
-                      }}
-                    />
-                  </label>
-
-                  <label
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      fontSize: "0.82rem",
-                      color: "#6b7280",
-                    }}
-                  >
-                    Hasta
-                    <input
-                      type="date"
-                      value={customTo}
-                      onChange={(event) =>
-                        setCustomTo(event.target.value)
-                      }
-                      style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        padding: "7px 9px",
-                        background: "#ffffff",
-                        color: "#374151",
-                      }}
-                    />
-                  </label>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {customPeriodError && (
-            <div
-              className={styles.analyticsError}
-              style={{
-                marginTop: "16px",
-                padding: "14px 16px",
-              }}
-            >
-              <p>
-                La fecha inicial no puede ser posterior a la
-                fecha final.
-              </p>
-            </div>
-          )}
-        </section>
-
-        <section className={styles.analyticsStatsGrid}>
-          <article className={styles.analyticsStatCard}>
-            <div className={styles.analyticsStatIcon}>
-              <VisitsIcon />
-            </div>
-
-            <span>Visitas</span>
-
-            <strong>
-              {periodData?.totals.visits ?? 0}
-            </strong>
-
-            <small>Accesos registrados</small>
-          </article>
-
-          <article className={styles.analyticsStatCard}>
-            <div className={styles.analyticsStatIcon}>
-              <GoogleIcon />
-            </div>
-
-            <span>Google</span>
-
-            <strong>
-              {periodData?.totals.googleClicks ?? 0}
-            </strong>
-
-            <small>Clics en dejar reseña</small>
-          </article>
-
-          <article className={styles.analyticsStatCard}>
-            <div className={styles.analyticsStatIcon}>
-              <InteractionIcon />
-            </div>
-
-            <span>Interacción</span>
-
-            <strong>
-              {periodData?.totals.interactionRate ?? 0}%
-            </strong>
-
-            <small>Clics de Google sobre visitas</small>
-          </article>
-
-          <article className={styles.analyticsStatCard}>
-            <div className={styles.analyticsStatIcon}>
-              <ActivityIcon />
-            </div>
-
-            <span>Última actividad</span>
-
-            <strong className={styles.analyticsStatDate}>
-              {formatDateTime(
-                periodData?.lastActivity ?? null
-              )}
-            </strong>
-
-            <small>Último evento del periodo</small>
-          </article>
-        </section>
-
-        <section
-          className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
-        >
-          <div className={styles.analyticsSectionHeading}>
-            <div>
-              <span className={styles.analyticsSectionLabel}>
-                Origen de los accesos
-              </span>
-
-              <h2>¿Cómo llegan los clientes?</h2>
-            </div>
-
-            <span className={styles.analyticsPeriod}>
-              {selectedPeriod.label}
-            </span>
-          </div>
-
-          <div className={styles.analyticsSourceGrid}>
-            <article className={styles.analyticsSourceCard}>
-              <div className={styles.analyticsSourceTop}>
-                <span className={styles.analyticsSourceIcon}>
-                  <NfcSourceIcon />
-                </span>
-
-                <span>NFC</span>
-              </div>
-
-              <strong>
-                {periodData?.bySource.nfc.visits ?? 0}
-              </strong>
-
-              <small>visitas</small>
-
-              <div className={styles.analyticsSourceDetail}>
-                {periodData?.bySource.nfc.googleClicks ?? 0}{" "}
-                clics en Google
-              </div>
-            </article>
-
-            <article className={styles.analyticsSourceCard}>
-              <div className={styles.analyticsSourceTop}>
-                <span className={styles.analyticsSourceIcon}>
-                  <QrSourceIcon />
-                </span>
-
-                <span>QR</span>
-              </div>
-
-              <strong>
-                {periodData?.bySource.qr.visits ?? 0}
-              </strong>
-
-              <small>visitas</small>
-
-              <div className={styles.analyticsSourceDetail}>
-                {periodData?.bySource.qr.googleClicks ?? 0}{" "}
-                clics en Google
-              </div>
-            </article>
-
-            <article className={styles.analyticsSourceCard}>
-              <div className={styles.analyticsSourceTop}>
-                <span className={styles.analyticsSourceIcon}>
-                  <DirectSourceIcon />
-                </span>
-
-                <span>Directo</span>
-              </div>
-
-              <strong>
-                {periodData?.bySource.direct.visits ?? 0}
-              </strong>
-
-              <small>visitas</small>
-
-              <div className={styles.analyticsSourceDetail}>
-                {periodData?.bySource.direct.googleClicks ?? 0}{" "}
-                clics en Google
-              </div>
-            </article>
-          </div>
-        </section>
-
-        <section
-          className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
-        >
-          <div className={styles.analyticsSectionHeading}>
-            <div>
-              <span className={styles.analyticsSectionLabel}>
-                Evolución
-              </span>
-
-              <h2>Accesos por día</h2>
-            </div>
-
-            <span className={styles.analyticsPeriod}>
-              {selectedPeriod.label}
-            </span>
-          </div>
-
-          {customPeriodError ? (
-            <div className={styles.analyticsEmpty}>
-              Corrige el periodo seleccionado para mostrar los datos.
-            </div>
-          ) : chartData.length === 0 ? (
-            <div className={styles.analyticsEmpty}>
-              No hay actividad registrada en este periodo.
-            </div>
-          ) : (
-            <div className={styles.analyticsChart}>
-              <div className={styles.analyticsChartBars}>
-                {chartData.map((item) => {
-                  const height = Math.max(
-                    (item.visits / maxVisits) * 100,
-                    5
-                  );
-
-                  return (
-                    <div
-                      className={styles.analyticsChartColumn}
-                      key={item.date}
-                    >
-                      <div className={styles.analyticsChartValue}>
-                        {item.visits}
-                      </div>
-
-                      <div className={styles.analyticsChartTrack}>
-                        <div
-                          className={styles.analyticsChartBar}
-                          style={{
-                            height: `${height}%`,
-                          }}
-                        />
-                      </div>
-
-                      <span>{formatDate(item.date)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </section>
-
-        <section
-          className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
-        >
-          <div className={styles.analyticsSectionHeading}>
-            <div>
-              <span className={styles.analyticsSectionLabel}>
-                Detalle
-              </span>
-
-              <h2>Actividad registrada</h2>
-            </div>
-
-            <span className={styles.analyticsPeriod}>
-              {periodRows.length}{" "}
-              {periodRows.length === 1
-                ? "registro"
-                : "registros"}
-            </span>
-          </div>
-
-          <div className={styles.analyticsTableWrapper}>
-            <table className={styles.analyticsTable}>
-              <thead>
-                <tr>
-                  <th>Fecha</th>
-                  <th>Origen</th>
-                  <th>Visitas</th>
-                  <th>Google</th>
-                  <th>Última actividad</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {periodRows.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      style={{
-                        textAlign: "center",
-                        padding: "28px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.82rem",
                         color: "#6b7280",
                       }}
                     >
-                      No hay actividad registrada en este periodo.
-                    </td>
-                  </tr>
-                ) : (
-                  periodRows
-                    .slice()
-                    .reverse()
-                    .map((row) => (
-                      <tr
-                        key={`${row.date}-${row.source}`}
-                      >
-                        <td>{formatDate(row.date)}</td>
+                      Desde
 
-                        <td>
-                          <span
-                            className={
-                              styles.analyticsTableSource
-                            }
-                          >
-                            {getSourceLabel(row.source)}
-                          </span>
-                        </td>
+                      <input
+                        type="date"
+                        value={customFrom}
+                        onChange={(event) =>
+                          setCustomFrom(
+                            event.target.value
+                          )
+                        }
+                        style={{
+                          border:
+                            "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          padding: "7px 9px",
+                          background:
+                            "#ffffff",
+                          color: "#374151",
+                        }}
+                      />
+                    </label>
 
-                        <td>{row.visits}</td>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "0.82rem",
+                        color: "#6b7280",
+                      }}
+                    >
+                      Hasta
 
-                        <td>{row.google_clicks}</td>
-
-                        <td>
-                          {formatDateTime(
-                            row.last_activity
-                          )}
-                        </td>
-                      </tr>
-                    ))
+                      <input
+                        type="date"
+                        value={customTo}
+                        onChange={(event) =>
+                          setCustomTo(
+                            event.target.value
+                          )
+                        }
+                        style={{
+                          border:
+                            "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          padding: "7px 9px",
+                          background:
+                            "#ffffff",
+                          color: "#374151",
+                        }}
+                      />
+                    </label>
+                  </div>
                 )}
-              </tbody>
-            </table>
-          </div>
-        </section>
+              </div>
+            </div>
 
-        <footer className={styles.analyticsFooter}>
-          <Image
-            className={styles.analyticsFooterLogo}
-            src="/logo/toca.svg"
-            alt="TOCA"
-            width={70}
-            height={27}
-          />
+            {customPeriodError && (
+              <div
+                className={
+                  styles.analyticsError
+                }
+                style={{
+                  marginTop: "16px",
+                  padding: "14px 16px",
+                }}
+              >
+                <p>
+                  La fecha inicial no puede ser
+                  posterior a la fecha final.
+                </p>
+              </div>
+            )}
+          </section>
 
-          <p>Todo tu negocio. En un toque.</p>
-        </footer>
+          <section
+            className={
+              styles.analyticsStatsGrid
+            }
+          >
+            <article
+              className={
+                styles.analyticsStatCard
+              }
+            >
+              <div
+                className={
+                  styles.analyticsStatIcon
+                }
+              >
+                <VisitsIcon />
+              </div>
+
+              <span>Visitas</span>
+
+              <strong>
+                {periodData?.totals.visits ??
+                  0}
+              </strong>
+
+              <small>
+                Accesos registrados
+              </small>
+            </article>
+
+            <article
+              className={
+                styles.analyticsStatCard
+              }
+            >
+              <div
+                className={
+                  styles.analyticsStatIcon
+                }
+              >
+                <GoogleIcon />
+              </div>
+
+              <span>Google</span>
+
+              <strong>
+                {periodData?.totals
+                  .googleClicks ?? 0}
+              </strong>
+
+              <small>
+                Clics en dejar reseña
+              </small>
+            </article>
+
+            <article
+              className={
+                styles.analyticsStatCard
+              }
+            >
+              <div
+                className={
+                  styles.analyticsStatIcon
+                }
+              >
+                <InteractionIcon />
+              </div>
+
+              <span>Interacción</span>
+
+              <strong>
+                {periodData?.totals
+                  .interactionRate ?? 0}
+                %
+              </strong>
+
+              <small>
+                Clics de Google sobre visitas
+              </small>
+            </article>
+
+            <article
+              className={
+                styles.analyticsStatCard
+              }
+            >
+              <div
+                className={
+                  styles.analyticsStatIcon
+                }
+              >
+                <ActivityIcon />
+              </div>
+
+              <span>Última actividad</span>
+
+              <strong
+                className={
+                  styles.analyticsStatDate
+                }
+              >
+                {formatDateTime(
+                  periodData?.lastActivity ??
+                  null
+                )}
+              </strong>
+
+              <small>
+                Último evento del periodo
+              </small>
+            </article>
+          </section>
+
+          <section
+            className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
+          >
+            <div
+              className={
+                styles.analyticsSectionHeading
+              }
+            >
+              <div>
+                <span
+                  className={
+                    styles.analyticsSectionLabel
+                  }
+                >
+                  Evolución
+                </span>
+
+                <h2>Accesos por día</h2>
+              </div>
+
+              <span
+                className={styles.analyticsPeriod}
+              >
+                {selectedPeriod.label}
+              </span>
+            </div>
+
+            {customPeriodError ? (
+              <div
+                className={styles.analyticsEmpty}
+              >
+                Corrige el periodo seleccionado
+                para mostrar los datos.
+              </div>
+            ) : chartData.length === 0 ? (
+              <div
+                className={styles.analyticsEmpty}
+              >
+                No hay actividad registrada en
+                este periodo.
+              </div>
+            ) : (
+              <div
+                className={
+                  styles.analyticsLineChart
+                }
+              >
+                <svg
+                  className={
+                    styles.analyticsLineChartSvg
+                  }
+                  viewBox={`0 0 ${chartGeometry.width} ${chartGeometry.height}`}
+                  role="img"
+                  aria-label="Evolución de accesos por día"
+                >
+                  <defs>
+                    <linearGradient
+                      id="analyticsLineFill"
+                      x1="0"
+                      x2="0"
+                      y1="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="0%"
+                        stopColor="#6366f1"
+                        stopOpacity="0.16"
+                      />
+
+                      <stop
+                        offset="100%"
+                        stopColor="#6366f1"
+                        stopOpacity="0"
+                      />
+                    </linearGradient>
+                  </defs>
+
+                  {[0, 1, 2, 3, 4].map(
+                    (line) => {
+                      const y =
+                        chartGeometry.paddingTop +
+                        (line *
+                          chartGeometry.innerHeight) /
+                        4;
+
+                      return (
+                        <line
+                          key={line}
+                          x1={
+                            chartGeometry.paddingLeft
+                          }
+                          x2={
+                            chartGeometry.width -
+                            chartGeometry.paddingRight
+                          }
+                          y1={y}
+                          y2={y}
+                          stroke="#ececf2"
+                          strokeWidth="1"
+                        />
+                      );
+                    }
+                  )}
+
+                  {chartGeometry.areaPath && (
+                    <path
+                      d={
+                        chartGeometry.areaPath
+                      }
+                      fill="url(#analyticsLineFill)"
+                    />
+                  )}
+
+                  {chartGeometry.linePath && (
+                    <path
+                      d={
+                        chartGeometry.linePath
+                      }
+                      fill="none"
+                      stroke="#6366f1"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  )}
+
+                  {chartGeometry.points.map(
+                    (point) => (
+                      <circle
+                        key={point.date}
+                        cx={point.x}
+                        cy={point.y}
+                        r="4.5"
+                        fill="#ffffff"
+                        stroke="#6366f1"
+                        strokeWidth="2.5"
+                        vectorEffect="non-scaling-stroke"
+                      >
+                        <title>
+                          {formatDate(
+                            point.date
+                          )}
+                          : {point.visits} visitas
+                        </title>
+                      </circle>
+                    )
+                  )}
+                </svg>
+
+                <div
+                  className={
+                    styles.analyticsLineChartLabels
+                  }
+                >
+                  {chartGeometry.labels.map(
+                    (point) => (
+                      <span
+                        key={point.date}
+                        style={{
+                          left: `${(point.x /
+                              chartGeometry
+                                .width) *
+                            100
+                            }%`,
+                        }}
+                      >
+                        {formatShortDate(
+                          point.date
+                        )}
+                      </span>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section
+            className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid}`}
+          >
+            <div
+              className={
+                styles.analyticsSectionHeading
+              }
+            >
+              <div>
+                <span
+                  className={
+                    styles.analyticsSectionLabel
+                  }
+                >
+                  Origen de las visitas
+                </span>
+
+                <h2>
+                  ¿Cómo llegan los clientes?
+                </h2>
+              </div>
+
+              <span
+                className={styles.analyticsPeriod}
+              >
+                {selectedPeriod.label}
+              </span>
+            </div>
+
+            <div
+              className={
+                styles.analyticsSourceList
+              }
+            >
+              {[
+                {
+                  key: "nfc",
+                  label: "NFC",
+                  icon: <NfcSourceIcon />,
+                  visits:
+                    periodData?.bySource.nfc
+                      .visits ?? 0,
+                  google:
+                    periodData?.bySource.nfc
+                      .googleClicks ?? 0,
+                },
+                {
+                  key: "qr",
+                  label: "QR",
+                  icon: <QrSourceIcon />,
+                  visits:
+                    periodData?.bySource.qr
+                      .visits ?? 0,
+                  google:
+                    periodData?.bySource.qr
+                      .googleClicks ?? 0,
+                },
+                {
+                  key: "direct",
+                  label: "Directo",
+                  icon: (
+                    <DirectSourceIcon />
+                  ),
+                  visits:
+                    periodData?.bySource
+                      .direct.visits ?? 0,
+                  google:
+                    periodData?.bySource
+                      .direct.googleClicks ?? 0,
+                },
+              ].map((source) => {
+                const percentage =
+                  getSourcePercentage(
+                    source.visits,
+                    periodData?.totals.visits ??
+                    0
+                  );
+
+                return (
+                  <div
+                    className={
+                      styles.analyticsSourceRow
+                    }
+                    key={source.key}
+                  >
+                    <div
+                      className={
+                        styles.analyticsSourceIdentity
+                      }
+                    >
+                      <span
+                        className={
+                          styles.analyticsSourceIcon
+                        }
+                      >
+                        {source.icon}
+                      </span>
+
+                      <strong>
+                        {source.label}
+                      </strong>
+                    </div>
+
+                    <div
+                      className={
+                        styles.analyticsSourceBarArea
+                      }
+                    >
+                      <div
+                        className={
+                          styles.analyticsSourceBarTrack
+                        }
+                      >
+                        <div
+                          className={
+                            styles.analyticsSourceBar
+                          }
+                          style={{
+                            width: `${percentage}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      className={
+                        styles.analyticsSourceNumbers
+                      }
+                    >
+                      <strong>
+                        {percentage}%
+                      </strong>
+
+                      <span>
+                        {source.visits} visitas ·{" "}
+                        {source.google} Google
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        {/* =========================
+            PÁGINA 2 PDF
+            ========================= */}
+
+        <div
+          className={
+            styles.analyticsPrintPageTwo
+          }
+        >
+          <section
+            className={`${styles.analyticsSection} ${styles.analyticsPrintAvoid} ${styles.analyticsDetailSection}`}
+          >
+            <div
+              className={
+                styles.analyticsSectionHeading
+              }
+            >
+              <div>
+                <span
+                  className={
+                    styles.analyticsSectionLabel
+                  }
+                >
+                  Detalle
+                </span>
+
+                <h2>Actividad registrada</h2>
+              </div>
+
+              <span
+                className={styles.analyticsPeriod}
+              >
+                {periodRows.length}{" "}
+                {periodRows.length === 1
+                  ? "registro"
+                  : "registros"}
+              </span>
+            </div>
+
+            <div
+              className={
+                styles.analyticsTableWrapper
+              }
+            >
+              <table
+                className={styles.analyticsTable}
+              >
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Origen</th>
+                    <th>Visitas</th>
+                    <th>Google</th>
+                    <th>
+                      Última actividad
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {periodRows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        style={{
+                          textAlign: "center",
+                          padding: "28px",
+                          color: "#6b7280",
+                        }}
+                      >
+                        No hay actividad
+                        registrada en este periodo.
+                      </td>
+                    </tr>
+                  ) : (
+                    periodRows
+                      .slice()
+                      .reverse()
+                      .map((row) => (
+                        <tr
+                          key={`${row.date}-${row.source}`}
+                        >
+                          <td>
+                            {formatDate(
+                              row.date
+                            )}
+                          </td>
+
+                          <td>
+                            <span
+                              className={
+                                styles.analyticsTableSource
+                              }
+                            >
+                              {getSourceLabel(
+                                row.source
+                              )}
+                            </span>
+                          </td>
+
+                          <td>{row.visits}</td>
+
+                          <td>
+                            {row.google_clicks}
+                          </td>
+
+                          <td>
+                            {formatDateTime(
+                              row.last_activity
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <footer
+            className={styles.analyticsFooter}
+          >
+            <Image
+              className={
+                styles.analyticsFooterLogo
+              }
+              src="/logo/toca.svg"
+              alt="TOCA"
+              width={70}
+              height={27}
+            />
+
+            <p>
+              Todo tu negocio. En un toque.
+            </p>
+          </footer>
+        </div>
       </div>
     </main>
   );
