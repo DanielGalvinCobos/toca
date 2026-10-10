@@ -63,6 +63,13 @@ type AuthResponse = {
 
 type StatusFilter = "all" | "active" | "inactive";
 
+type ReportPeriod =
+  | "last7"
+  | "last30"
+  | "thisMonth"
+  | "previousMonth"
+  | "custom";
+
 const emptyForm: BusinessForm = {
   name: "",
   slug: "",
@@ -383,43 +390,39 @@ function SearchIcon() {
 }
 
 export default function GestionPanel() {
-  const [authenticated, setAuthenticated] = useState<boolean | null>(
-    null
-  );
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
   const [password, setPassword] = useState("");
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [summary, setSummary] =
-    useState<ManagementSummary>(emptySummary);
+  const [summary, setSummary] = useState<ManagementSummary>(emptySummary);
   const [statsByBusiness, setStatsByBusiness] = useState<
     Record<string, BusinessStats>
   >({});
-  const [dailyActivity, setDailyActivity] = useState<
-    DailyActivity[]
-  >([]);
+  const [dailyActivity, setDailyActivity] = useState<DailyActivity[]>([]);
 
   const [form, setForm] = useState<BusinessForm>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [quickDeletingId, setQuickDeletingId] = useState<
-    string | null
-  >(null);
-  const [activatingId, setActivatingId] = useState<string | null>(
-    null
-  );
+  const [quickDeletingId, setQuickDeletingId] = useState<string | null>(null);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
 
   const [loginError, setLoginError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [reportFrom, setReportFrom] = useState("");
+  const [reportTo, setReportTo] = useState("");
+  const [generatingReports, setGeneratingReports] = useState(false);
+  const [reportError, setReportError] = useState("");
+  const [reportSuccess, setReportSuccess] = useState("");
+  const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("last7");
 
   async function checkAuthentication() {
     try {
@@ -455,9 +458,7 @@ export default function GestionPanel() {
       }
 
       if (!response.ok) {
-        setError(
-          data.error || "No se pudieron cargar los negocios."
-        );
+        setError(data.error || "No se pudieron cargar los negocios.");
         return;
       }
 
@@ -472,6 +473,84 @@ export default function GestionPanel() {
 
   useEffect(() => {
     checkAuthentication();
+  }, []);
+
+  useEffect(() => {
+    const today = new Date();
+
+    const formatLocalDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    };
+
+    const getPeriodDates = (period: ReportPeriod) => {
+      const current = new Date(today);
+
+      if (period === "last7") {
+        const from = new Date(current);
+        from.setDate(from.getDate() - 6);
+
+        return {
+          from: formatLocalDate(from),
+          to: formatLocalDate(current),
+        };
+      }
+
+      if (period === "last30") {
+        const from = new Date(current);
+        from.setDate(from.getDate() - 29);
+
+        return {
+          from: formatLocalDate(from),
+          to: formatLocalDate(current),
+        };
+      }
+
+      if (period === "thisMonth") {
+        const from = new Date(
+          current.getFullYear(),
+          current.getMonth(),
+          1
+        );
+
+        return {
+          from: formatLocalDate(from),
+          to: formatLocalDate(current),
+        };
+      }
+
+      if (period === "previousMonth") {
+        const from = new Date(
+          current.getFullYear(),
+          current.getMonth() - 1,
+          1
+        );
+
+        const to = new Date(
+          current.getFullYear(),
+          current.getMonth(),
+          0
+        );
+
+        return {
+          from: formatLocalDate(from),
+          to: formatLocalDate(to),
+        };
+      }
+
+      return {
+        from: reportFrom,
+        to: reportTo,
+      };
+    };
+
+    const dates = getPeriodDates("last7");
+
+    setReportFrom(dates.from);
+    setReportTo(dates.to);
   }, []);
 
   useEffect(() => {
@@ -499,9 +578,7 @@ export default function GestionPanel() {
       const data = (await response.json()) as AuthResponse;
 
       if (!response.ok) {
-        setLoginError(
-          data.error || "La contraseña no es correcta."
-        );
+        setLoginError(data.error || "La contraseña no es correcta.");
         return;
       }
 
@@ -533,6 +610,179 @@ export default function GestionPanel() {
       setStatusFilter("all");
       setError("");
       setSuccess("");
+    }
+  }
+
+  function handleReportPeriodChange(period: ReportPeriod) {
+    setReportPeriod(period);
+    setReportError("");
+    setReportSuccess("");
+
+    if (period === "custom") {
+      return;
+    }
+
+    const today = new Date();
+
+    const formatLocalDate = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      return `${year}-${month}-${day}`;
+    };
+
+    if (period === "last7") {
+      const from = new Date(today);
+      from.setDate(from.getDate() - 6);
+
+      setReportFrom(formatLocalDate(from));
+      setReportTo(formatLocalDate(today));
+      return;
+    }
+
+    if (period === "last30") {
+      const from = new Date(today);
+      from.setDate(from.getDate() - 29);
+
+      setReportFrom(formatLocalDate(from));
+      setReportTo(formatLocalDate(today));
+      return;
+    }
+
+    if (period === "thisMonth") {
+      const from = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+      setReportFrom(formatLocalDate(from));
+      setReportTo(formatLocalDate(today));
+      return;
+    }
+
+    if (period === "previousMonth") {
+      const from = new Date(
+        today.getFullYear(),
+        today.getMonth() - 1,
+        1
+      );
+
+      const to = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        0
+      );
+
+      setReportFrom(formatLocalDate(from));
+      setReportTo(formatLocalDate(to));
+    }
+  }
+
+  async function handleGenerateReports() {
+    if (!reportFrom || !reportTo) {
+      setReportError("Selecciona una fecha inicial y una fecha final.");
+      setReportSuccess("");
+      return;
+    }
+
+    if (reportFrom > reportTo) {
+      setReportError(
+        "La fecha inicial no puede ser posterior a la fecha final."
+      );
+      setReportSuccess("");
+      return;
+    }
+
+    setGeneratingReports(true);
+    setReportError("");
+    setReportSuccess("");
+
+    try {
+      const response = await fetch(
+        `/api/gestion/reports/bulk?from=${encodeURIComponent(
+          reportFrom
+        )}&to=${encodeURIComponent(reportTo)}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        let message = "No se han podido generar los informes.";
+
+        try {
+          const data = (await response.json()) as {
+            error?: string;
+          };
+
+          if (data.error) {
+            message = data.error;
+          }
+        } catch {
+          // La respuesta puede no ser JSON.
+        }
+
+        setReportError(message);
+        return;
+      }
+
+      const blob = await response.blob();
+
+      const contentDisposition = response.headers.get("Content-Disposition");
+
+      let filename = `TOCA_Informes_${reportFrom}_${reportTo}.zip`;
+
+      const filenameMatch = contentDisposition?.match(/filename="([^"]+)"/);
+
+      if (filenameMatch?.[1]) {
+        filename = filenameMatch[1];
+      }
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url);
+
+      const generated = response.headers.get("X-TOCA-Reports-Generated");
+
+      const failed = response.headers.get("X-TOCA-Reports-Failed");
+
+      if (failed && Number(failed) > 0) {
+        setReportSuccess(
+          `ZIP generado: ${generated || "varios"} informes correctamente. ` +
+            `${failed} negocio${
+              Number(failed) === 1 ? "" : "s"
+            } tuvo${
+              Number(failed) === 1 ? "" : "ieron"
+            } un error. Consulta TOCA_Resumen.txt.`
+        );
+      } else {
+        setReportSuccess(
+          `ZIP generado correctamente con ${
+            generated || "todos los"
+          } informes.`
+        );
+      }
+    } catch {
+      setReportError("No se han podido generar los informes.");
+    } finally {
+      setGeneratingReports(false);
     }
   }
 
@@ -602,9 +852,7 @@ export default function GestionPanel() {
     }));
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setSaving(true);
@@ -636,9 +884,7 @@ export default function GestionPanel() {
       }
 
       if (!response.ok) {
-        setError(
-          data.error || "No se pudo guardar el negocio."
-        );
+        setError(data.error || "No se pudo guardar el negocio.");
         return;
       }
 
@@ -674,8 +920,8 @@ export default function GestionPanel() {
 
     const confirmed = window.confirm(
       `¿Seguro que quieres desactivar "${businessName}"?\n\n` +
-      "Su página pública dejará de estar disponible, " +
-      "pero sus estadísticas se conservarán."
+        "Su página pública dejará de estar disponible, " +
+        "pero sus estadísticas se conservarán."
     );
 
     if (!confirmed) {
@@ -708,9 +954,7 @@ export default function GestionPanel() {
       }
 
       if (!response.ok) {
-        setError(
-          data.error || "No se pudo desactivar el negocio."
-        );
+        setError(data.error || "No se pudo desactivar el negocio.");
         return;
       }
 
@@ -734,18 +978,14 @@ export default function GestionPanel() {
     businessId: string,
     businessName: string
   ) {
-    if (
-      activatingId ||
-      quickDeletingId ||
-      deleting
-    ) {
+    if (activatingId || quickDeletingId || deleting) {
       return;
     }
 
     const confirmed = window.confirm(
       `¿Quieres reactivar "${businessName}"?\n\n` +
-      "Su página pública volverá a estar disponible " +
-      "y conservará sus estadísticas."
+        "Su página pública volverá a estar disponible " +
+        "y conservará sus estadísticas."
     );
 
     if (!confirmed) {
@@ -779,16 +1019,13 @@ export default function GestionPanel() {
       }
 
       if (!response.ok) {
-        setError(
-          data.error ||
-          "No se pudo reactivar el negocio."
-        );
+        setError(data.error || "No se pudo reactivar el negocio.");
         return;
       }
 
       setSuccess(
         "Negocio reactivado correctamente. " +
-        "Su página pública vuelve a estar disponible."
+          "Su página pública vuelve a estar disponible."
       );
 
       await loadBusinesses();
@@ -810,8 +1047,8 @@ export default function GestionPanel() {
 
     const confirmed = window.confirm(
       `¿Seguro que quieres eliminar "${form.name}"?\n\n` +
-      "Su página pública dejará de estar disponible, " +
-      "pero sus estadísticas se conservarán."
+        "Su página pública dejará de estar disponible, " +
+        "pero sus estadísticas se conservarán."
     );
 
     if (!confirmed) {
@@ -844,9 +1081,7 @@ export default function GestionPanel() {
       }
 
       if (!response.ok) {
-        setError(
-          data.error || "No se pudo eliminar el negocio."
-        );
+        setError(data.error || "No se pudo eliminar el negocio.");
         return;
       }
 
@@ -871,19 +1106,13 @@ export default function GestionPanel() {
   }
 
   const filteredBusinesses = useMemo(() => {
-    const normalizedSearch = searchTerm
-      .trim()
-      .toLowerCase();
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return businesses.filter((business) => {
       const matchesSearch =
         !normalizedSearch ||
-        business.name
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        business.slug
-          .toLowerCase()
-          .includes(normalizedSearch);
+        business.name.toLowerCase().includes(normalizedSearch) ||
+        business.slug.toLowerCase().includes(normalizedSearch);
 
       const matchesStatus =
         statusFilter === "all" ||
@@ -898,8 +1127,7 @@ export default function GestionPanel() {
     return Math.max(
       1,
       ...dailyActivity.map(
-        (activity) =>
-          activity.visits + activity.googleClicks
+        (activity) => activity.visits + activity.googleClicks
       )
     );
   }, [dailyActivity]);
@@ -936,30 +1164,22 @@ export default function GestionPanel() {
               <LockIcon />
             </div>
 
-            <span className={styles.loginLabel}>
-              Área privada
-            </span>
+            <span className={styles.loginLabel}>Área privada</span>
 
             <h1>Gestión de TOCA</h1>
 
             <p className={styles.loginDescription}>
-              Accede al panel para administrar los negocios
-              conectados a TOCA.
+              Accede al panel para administrar los negocios conectados a TOCA.
             </p>
 
-            <form
-              className={styles.loginForm}
-              onSubmit={handleLogin}
-            >
+            <form className={styles.loginForm} onSubmit={handleLogin}>
               <label htmlFor="password">Contraseña</label>
 
               <input
                 id="password"
                 type="password"
                 value={password}
-                onChange={(event) =>
-                  setPassword(event.target.value)
-                }
+                onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
                 placeholder="Introduce tu contraseña"
                 required
@@ -972,10 +1192,7 @@ export default function GestionPanel() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                className={styles.loginButton}
-              >
+              <button type="submit" className={styles.loginButton}>
                 <span>Acceder al panel</span>
                 <ArrowIcon />
               </button>
@@ -1009,15 +1226,12 @@ export default function GestionPanel() {
 
           <div className={styles.headerContent}>
             <div className={styles.headerText}>
-              <span className={styles.eyebrow}>
-                Panel privado
-              </span>
+              <span className={styles.eyebrow}>Panel privado</span>
 
               <h1>Tu panel de TOCA</h1>
 
               <p>
-                Gestiona tus negocios y controla todo desde
-                un mismo lugar.
+                Gestiona tus negocios y controla todo desde un mismo lugar.
               </p>
             </div>
 
@@ -1048,8 +1262,8 @@ export default function GestionPanel() {
               <h2>Todo listo para gestionar.</h2>
 
               <p>
-                Consulta el estado de tus negocios y el
-                rendimiento global de TOCA desde un único lugar.
+                Consulta el estado de tus negocios y el rendimiento global de
+                TOCA desde un único lugar.
               </p>
             </div>
 
@@ -1110,13 +1324,9 @@ export default function GestionPanel() {
               <div className={styles.dashboardStatContent}>
                 <span>Visitas totales</span>
 
-                <strong>
-                  {formatNumber(summary.visits)}
-                </strong>
+                <strong>{formatNumber(summary.visits)}</strong>
 
-                <p>
-                  Actividad registrada en las páginas
-                </p>
+                <p>Actividad registrada en las páginas</p>
               </div>
             </article>
 
@@ -1130,13 +1340,9 @@ export default function GestionPanel() {
               <div className={styles.dashboardStatContent}>
                 <span>Interacciones</span>
 
-                <strong>
-                  {formatNumber(summary.googleClicks)}
-                </strong>
+                <strong>{formatNumber(summary.googleClicks)}</strong>
 
-                <p>
-                  Clics registrados hacia Google
-                </p>
+                <p>Clics registrados hacia Google</p>
               </div>
             </article>
           </div>
@@ -1171,13 +1377,10 @@ export default function GestionPanel() {
               <div className={styles.activityEmpty}>
                 <ActivityIcon />
 
-                <p>
-                  Aún no hay actividad registrada.
-                </p>
+                <p>Aún no hay actividad registrada.</p>
 
                 <span>
-                  Cuando tus páginas reciban visitas,
-                  aparecerán aquí.
+                  Cuando tus páginas reciban visitas, aparecerán aquí.
                 </span>
               </div>
             ) : (
@@ -1187,8 +1390,7 @@ export default function GestionPanel() {
                     (activity.visits / maxActivity) * 100;
 
                   const clicksWidth =
-                    (activity.googleClicks / maxActivity) *
-                    100;
+                    (activity.googleClicks / maxActivity) * 100;
 
                   return (
                     <div
@@ -1205,12 +1407,8 @@ export default function GestionPanel() {
                             className={`${styles.activityBar} ${styles.activityBarVisits}`}
                             style={{
                               width: `${Math.max(
-                                activity.visits > 0
-                                  ? visitsWidth
-                                  : 0,
-                                activity.visits > 0
-                                  ? 3
-                                  : 0
+                                activity.visits > 0 ? visitsWidth : 0,
+                                activity.visits > 0 ? 3 : 0
                               )}%`,
                             }}
                           />
@@ -1224,9 +1422,7 @@ export default function GestionPanel() {
                                 activity.googleClicks > 0
                                   ? clicksWidth
                                   : 0,
-                                activity.googleClicks > 0
-                                  ? 3
-                                  : 0
+                                activity.googleClicks > 0 ? 3 : 0
                               )}%`,
                             }}
                           />
@@ -1234,19 +1430,225 @@ export default function GestionPanel() {
                       </div>
 
                       <div className={styles.activityValues}>
-                        <strong>
-                          {formatNumber(activity.visits)}
-                        </strong>
+                        <strong>{formatNumber(activity.visits)}</strong>
 
                         <span>
-                          {formatNumber(
-                            activity.googleClicks
-                          )}
+                          {formatNumber(activity.googleClicks)}
                         </span>
                       </div>
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className={styles.reportsSection}>
+          <div className={styles.sectionHeading}>
+            <div className={styles.sectionHeadingMain}>
+              <div className={styles.sectionIcon}>
+                <ChartIcon />
+              </div>
+
+              <div>
+                <span className={styles.sectionLabel}>Informes</span>
+                <h2>Informes de actividad</h2>
+                <p>
+                  Genera los informes de todos tus negocios activos en un solo
+                  archivo.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.reportsCard}>
+            <div className={styles.reportsTop}>
+              <div className={styles.reportsIntro}>
+                <span className={styles.reportCardEyebrow}>
+                  Generador de informes
+                </span>
+
+                <h3>Periodo del informe</h3>
+
+                <p>¿Qué actividad quieres analizar?</p>
+              </div>
+
+              <div className={styles.reportBusinessCount}>
+                <strong>{summary.active}</strong>
+                <span>
+                  {summary.active === 1
+                    ? "negocio activo"
+                    : "negocios activos"}
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.reportPeriodButtons}>
+              <button
+                type="button"
+                className={
+                  reportPeriod === "last7"
+                    ? styles.reportPeriodButtonActive
+                    : styles.reportPeriodButton
+                }
+                onClick={() => handleReportPeriodChange("last7")}
+                disabled={generatingReports}
+              >
+                <span>Últimos 7 días</span>
+              </button>
+
+              <button
+                type="button"
+                className={
+                  reportPeriod === "last30"
+                    ? styles.reportPeriodButtonActive
+                    : styles.reportPeriodButton
+                }
+                onClick={() => handleReportPeriodChange("last30")}
+                disabled={generatingReports}
+              >
+                <span>Últimos 30 días</span>
+              </button>
+
+              <button
+                type="button"
+                className={
+                  reportPeriod === "thisMonth"
+                    ? styles.reportPeriodButtonActive
+                    : styles.reportPeriodButton
+                }
+                onClick={() => handleReportPeriodChange("thisMonth")}
+                disabled={generatingReports}
+              >
+                <span>Este mes</span>
+              </button>
+
+              <button
+                type="button"
+                className={
+                  reportPeriod === "previousMonth"
+                    ? styles.reportPeriodButtonActive
+                    : styles.reportPeriodButton
+                }
+                onClick={() => handleReportPeriodChange("previousMonth")}
+                disabled={generatingReports}
+              >
+                <span>Mes anterior</span>
+              </button>
+
+              <button
+                type="button"
+                className={
+                  reportPeriod === "custom"
+                    ? styles.reportPeriodButtonActive
+                    : styles.reportPeriodButton
+                }
+                onClick={() => handleReportPeriodChange("custom")}
+                disabled={generatingReports}
+              >
+                <span>Personalizado</span>
+              </button>
+            </div>
+
+            <div className={styles.reportDateArea}>
+              <div className={styles.reportDateField}>
+                <label htmlFor="reports-from">Desde</label>
+
+                <input
+                  id="reports-from"
+                  type="date"
+                  value={reportFrom}
+                  onChange={(event) => {
+                    setReportPeriod("custom");
+                    setReportFrom(event.target.value);
+                    setReportError("");
+                    setReportSuccess("");
+                  }}
+                  disabled={generatingReports}
+                />
+              </div>
+
+              <div className={styles.reportDateSeparator}>
+                <ArrowIcon />
+              </div>
+
+              <div className={styles.reportDateField}>
+                <label htmlFor="reports-to">Hasta</label>
+
+                <input
+                  id="reports-to"
+                  type="date"
+                  value={reportTo}
+                  onChange={(event) => {
+                    setReportPeriod("custom");
+                    setReportTo(event.target.value);
+                    setReportError("");
+                    setReportSuccess("");
+                  }}
+                  disabled={generatingReports}
+                />
+              </div>
+
+              <button
+                type="button"
+                className={styles.reportGenerateButton}
+                onClick={handleGenerateReports}
+                disabled={
+                  generatingReports ||
+                  !reportFrom ||
+                  !reportTo ||
+                  summary.active === 0
+                }
+              >
+                {generatingReports ? (
+                  <>
+                    <span className={styles.spinner} />
+                    <span>Generando...</span>
+                  </>
+                ) : (
+                  <>
+                    <ChartIcon />
+                    <span>Generar informes</span>
+                    <ArrowIcon />
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className={styles.reportOutput}>
+              <div className={styles.reportOutputIcon}>
+                <ChartIcon />
+              </div>
+
+              <div className={styles.reportOutputText}>
+                <strong>Se generará un informe por negocio</strong>
+
+                <span>
+                  {summary.active === 0
+                    ? "Crea o reactiva un negocio para comenzar."
+                    : `${summary.active} negocio${
+                        summary.active === 1 ? "" : "s"
+                      } activo${
+                        summary.active === 1 ? "" : "s"
+                      } · un PDF individual por cada uno · un único ZIP para descargar.`}
+                </span>
+              </div>
+
+              <div className={styles.reportOutputBadge}>ZIP</div>
+            </div>
+
+            {reportError && (
+              <div className={styles.formError}>
+                <AlertIcon />
+                <span>{reportError}</span>
+              </div>
+            )}
+
+            {reportSuccess && (
+              <div className={styles.formSuccess}>
+                <span className={styles.successCheck}>✓</span>
+                <span>{reportSuccess}</span>
               </div>
             )}
           </div>
@@ -1260,16 +1662,13 @@ export default function GestionPanel() {
               </div>
 
               <div>
-                <span className={styles.sectionLabel}>
-                  Directorio
-                </span>
+                <span className={styles.sectionLabel}>Directorio</span>
 
                 <h2>Mis negocios</h2>
 
                 <p>
-                  {summary.total} negocio
-                  {summary.total === 1 ? "" : "s"} registrado
-                  {summary.total === 1 ? "" : "s"} en TOCA.
+                  {summary.total} negocio{summary.total === 1 ? "" : "s"}{" "}
+                  registrado{summary.total === 1 ? "" : "s"} en TOCA.
                 </p>
               </div>
             </div>
@@ -1305,9 +1704,7 @@ export default function GestionPanel() {
               <input
                 type="search"
                 value={searchTerm}
-                onChange={(event) =>
-                  setSearchTerm(event.target.value)
-                }
+                onChange={(event) => setSearchTerm(event.target.value)}
                 placeholder="Buscar por nombre o slug..."
                 aria-label="Buscar negocio"
               />
@@ -1353,9 +1750,7 @@ export default function GestionPanel() {
                       ? styles.filterButtonActive
                       : styles.filterButton
                   }
-                  onClick={() =>
-                    setStatusFilter("inactive")
-                  }
+                  onClick={() => setStatusFilter("inactive")}
                 >
                   Inactivos
                   <span>{summary.inactive}</span>
@@ -1373,8 +1768,7 @@ export default function GestionPanel() {
               <h3>No hay negocios registrados</h3>
 
               <p>
-                Crea el primer negocio para comenzar a utilizar
-                TOCA.
+                Crea el primer negocio para comenzar a utilizar TOCA.
               </p>
 
               <button
@@ -1395,8 +1789,8 @@ export default function GestionPanel() {
               <h3>No hay resultados</h3>
 
               <p>
-                No hay negocios que coincidan con la búsqueda o
-                el filtro seleccionado.
+                No hay negocios que coincidan con la búsqueda o el filtro
+                seleccionado.
               </p>
 
               <button
@@ -1413,19 +1807,16 @@ export default function GestionPanel() {
           ) : (
             <div className={styles.businessList}>
               {filteredBusinesses.map((business) => {
-                const stats =
-                  statsByBusiness[business.id] || {
-                    visits: 0,
-                    googleClicks: 0,
-                    lastActivity: null,
-                  };
+                const stats = statsByBusiness[business.id] || {
+                  visits: 0,
+                  googleClicks: 0,
+                  lastActivity: null,
+                };
 
                 return (
                   <article
                     className={`${styles.business} ${
-                      !business.active
-                        ? styles.businessInactive
-                        : ""
+                      !business.active ? styles.businessInactive : ""
                     }`}
                     key={business.id}
                   >
@@ -1459,9 +1850,7 @@ export default function GestionPanel() {
 
                           <h3>{business.name}</h3>
 
-                          <span
-                            className={styles.businessSlug}
-                          >
+                          <span className={styles.businessSlug}>
                             /{business.slug}
                           </span>
                         </div>
@@ -1470,35 +1859,27 @@ export default function GestionPanel() {
                       <div className={styles.businessMeta}>
                         <div>
                           <span>Visitas</span>
-                          <strong>
-                            {formatNumber(stats.visits)}
-                          </strong>
+                          <strong>{formatNumber(stats.visits)}</strong>
                         </div>
 
                         <div>
                           <span>Interacciones</span>
                           <strong>
-                            {formatNumber(
-                              stats.googleClicks
-                            )}
+                            {formatNumber(stats.googleClicks)}
                           </strong>
                         </div>
 
                         <div>
                           <span>Última actividad</span>
                           <strong>
-                            {formatDate(
-                              stats.lastActivity
-                            )}
+                            {formatDate(stats.lastActivity)}
                           </strong>
                         </div>
 
                         <div>
                           <span>Creado</span>
                           <strong>
-                            {formatCreatedDate(
-                              business.createdAt
-                            )}
+                            {formatCreatedDate(business.createdAt)}
                           </strong>
                         </div>
                       </div>
@@ -1529,9 +1910,7 @@ export default function GestionPanel() {
                         <button
                           type="button"
                           className={styles.actionButton}
-                          onClick={() =>
-                            startEditing(business)
-                          }
+                          onClick={() => startEditing(business)}
                         >
                           <EditIcon />
                           <span>Editar</span>
@@ -1543,10 +1922,7 @@ export default function GestionPanel() {
                           type="button"
                           className={`${styles.actionButton} ${styles.actionDanger}`}
                           onClick={() =>
-                            deactivateBusiness(
-                              business.id,
-                              business.name
-                            )
+                            deactivateBusiness(business.id, business.name)
                           }
                           disabled={
                             quickDeletingId === business.id ||
@@ -1565,10 +1941,7 @@ export default function GestionPanel() {
                           type="button"
                           className={`${styles.actionButton} ${styles.actionReactivate}`}
                           onClick={() =>
-                            activateBusiness(
-                              business.id,
-                              business.name
-                            )
+                            activateBusiness(business.id, business.name)
                           }
                           disabled={
                             activatingId === business.id ||
@@ -1602,15 +1975,11 @@ export default function GestionPanel() {
 
                 <div>
                   <span className={styles.sectionLabel}>
-                    {editingId
-                      ? "Configuración"
-                      : "Nuevo registro"}
+                    {editingId ? "Configuración" : "Nuevo registro"}
                   </span>
 
                   <h2>
-                    {editingId
-                      ? "Editar negocio"
-                      : "Añadir negocio"}
+                    {editingId ? "Editar negocio" : "Añadir negocio"}
                   </h2>
 
                   <p>
@@ -1631,15 +2000,10 @@ export default function GestionPanel() {
               </button>
             </div>
 
-            <form
-              className={styles.form}
-              onSubmit={handleSubmit}
-            >
+            <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.formGrid}>
                 <div className={styles.field}>
-                  <label htmlFor="business-name">
-                    Nombre del negocio
-                  </label>
+                  <label htmlFor="business-name">Nombre del negocio</label>
 
                   <input
                     id="business-name"
@@ -1654,9 +2018,7 @@ export default function GestionPanel() {
                 </div>
 
                 <div className={styles.field}>
-                  <label htmlFor="business-slug">
-                    Slug
-                  </label>
+                  <label htmlFor="business-slug">Slug</label>
 
                   <input
                     id="business-slug"
@@ -1665,9 +2027,7 @@ export default function GestionPanel() {
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        slug: createSlug(
-                          event.target.value
-                        ),
+                        slug: createSlug(event.target.value),
                       }))
                     }
                     placeholder="bar-pepe"
@@ -1676,9 +2036,7 @@ export default function GestionPanel() {
 
                   <span className={styles.help}>
                     URL pública:{" "}
-                    <strong>
-                      /{form.slug || "..."}
-                    </strong>
+                    <strong>/{form.slug || "..."}</strong>
                   </span>
                 </div>
 
@@ -1694,8 +2052,7 @@ export default function GestionPanel() {
                     onChange={(event) =>
                       setForm((current) => ({
                         ...current,
-                        googleReviewUrl:
-                          event.target.value,
+                        googleReviewUrl: event.target.value,
                       }))
                     }
                     placeholder="https://g.page/r/..."
@@ -1703,18 +2060,14 @@ export default function GestionPanel() {
                   />
 
                   <span className={styles.help}>
-                    Enlace al formulario de reseña del negocio
-                    en Google.
+                    Enlace al formulario de reseña del negocio en Google.
                   </span>
                 </div>
 
                 <div className={styles.fieldFull}>
                   <label htmlFor="logo-url">
                     URL del logo
-                    <span className={styles.optional}>
-                      {" "}
-                      · opcional
-                    </span>
+                    <span className={styles.optional}> · opcional</span>
                   </label>
 
                   <input
@@ -1745,8 +2098,8 @@ export default function GestionPanel() {
                     <strong>Zona de peligro</strong>
 
                     <span>
-                      Desactiva este negocio y retira su página
-                      pública. Sus estadísticas se conservarán.
+                      Desactiva este negocio y retira su página pública.
+                      Sus estadísticas se conservarán.
                     </span>
                   </div>
 
@@ -1758,9 +2111,7 @@ export default function GestionPanel() {
                   >
                     <TrashIcon />
 
-                    {deleting
-                      ? "Desactivando..."
-                      : "Desactivar negocio"}
+                    {deleting ? "Desactivando..." : "Desactivar negocio"}
                   </button>
                 </div>
               )}
@@ -1783,8 +2134,8 @@ export default function GestionPanel() {
                   {saving
                     ? "Guardando..."
                     : editingId
-                      ? "Guardar cambios"
-                      : "Crear negocio"}
+                    ? "Guardar cambios"
+                    : "Crear negocio"}
 
                   {!saving && !deleting && <ArrowIcon />}
                 </button>
@@ -1821,17 +2172,13 @@ export default function GestionPanel() {
               <LockIcon />
             </div>
 
-            <span className={styles.logoutModalLabel}>
-              Cerrar sesión
-            </span>
+            <span className={styles.logoutModalLabel}>Cerrar sesión</span>
 
-            <h2 id="logout-modal-title">
-              ¿Quieres cerrar sesión?
-            </h2>
+            <h2 id="logout-modal-title">¿Quieres cerrar sesión?</h2>
 
             <p id="logout-modal-description">
-              Tendrás que volver a introducir la contraseña
-              para acceder al panel de gestión de TOCA.
+              Tendrás que volver a introducir la contraseña para acceder al
+              panel de gestión de TOCA.
             </p>
 
             <div className={styles.logoutModalActions}>
