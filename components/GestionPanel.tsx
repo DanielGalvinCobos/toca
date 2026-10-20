@@ -61,6 +61,25 @@ type AuthResponse = {
   error?: string;
 };
 
+type ReportHistoryItem = {
+  id: string;
+  reportType: "individual" | "collective";
+  periodFrom: string;
+  periodTo: string;
+  status: "completed" | "failed";
+  fileName: string | null;
+  contentType: string | null;
+  fileSize: number | null;
+  businessCount: number;
+  createdAt: string;
+  errorMessage: string | null;
+};
+
+type ReportHistoryResponse = {
+  reports?: ReportHistoryItem[];
+  error?: string;
+};
+
 type StatusFilter = "all" | "active" | "inactive";
 
 type ReportPeriod =
@@ -104,7 +123,11 @@ function formatDate(value: string | null) {
     return "Sin actividad";
   }
 
-  const date = new Date(value);
+  const normalizedValue = value.includes(" ")
+    ? value.replace(" ", "T")
+    : value;
+
+  const date = new Date(normalizedValue);
 
   if (Number.isNaN(date.getTime())) {
     return value;
@@ -147,6 +170,28 @@ function formatActivityDate(value: string) {
     month: "short",
   }).format(date);
 }
+
+function formatFileSize(bytes: number | null) {
+  if (bytes === null || !Number.isFinite(bytes) || bytes < 0) {
+    return "Tamaño desconocido";
+  }
+
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toLocaleString("es-ES", {
+      maximumFractionDigits: 1,
+    })} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toLocaleString("es-ES", {
+    maximumFractionDigits: 1,
+  })} MB`;
+}
+
+/* ICONOS */
 
 function StoreIcon() {
   return (
@@ -225,12 +270,31 @@ function ExternalIcon() {
   );
 }
 
+function EyeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 function ChartIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="16"
-      height="16"
+      width="18"
+      height="18"
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
@@ -241,6 +305,134 @@ function ChartIcon() {
       <path d="M4 19V5" />
       <path d="M4 19h17" />
       <path d="m7 15 4-4 3 2 5-6" />
+    </svg>
+  );
+}
+
+function DocumentIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 3.75h7l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2Z" />
+      <path d="M14 3.75v4h4" />
+      <path d="M8.5 12h7" />
+      <path d="M8.5 15.5h7" />
+    </svg>
+  );
+}
+
+function AddDocumentIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6.5 3.75h7l4 4v5.5" />
+      <path d="M13.5 3.75v4h4" />
+      <path d="M6.5 3.75a2 2 0 0 0-2 2v12.5a2 2 0 0 0 2 2h6" />
+      <path d="M8 11h6M8 14h5" />
+      <circle cx="18" cy="18" r="4" />
+      <path d="M18 16v4M16 18h4" />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5v5l3 2" />
+      <path d="M4 4.5v4h4" />
+    </svg>
+  );
+}
+
+function SearchDocumentIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="22"
+      height="22"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6.5 3.5h7l4 4v4" />
+      <path d="M13.5 3.5v4h4" />
+      <path d="M6.5 3.5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+      <path d="M8 11h6M8 14h3" />
+      <circle cx="16.5" cy="16.5" r="3.5" />
+      <path d="m19 19 2 2" />
+    </svg>
+  );
+}
+
+function DownloadIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="17"
+      height="17"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M4 17v3h16v-3" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 7v5h-5" />
+      <path d="M4.8 9a7.5 7.5 0 0 1 12.6-2.2L20 12" />
+      <path d="M4 17v-5h5" />
+      <path d="M19.2 15a7.5 7.5 0 0 1-12.6 2.2L4 12" />
     </svg>
   );
 }
@@ -417,12 +609,20 @@ export default function GestionPanel() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+
   const [reportFrom, setReportFrom] = useState("");
   const [reportTo, setReportTo] = useState("");
   const [generatingReports, setGeneratingReports] = useState(false);
   const [reportError, setReportError] = useState("");
   const [reportSuccess, setReportSuccess] = useState("");
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>("last7");
+
+  const [reportHistory, setReportHistory] = useState<ReportHistoryItem[]>([]);
+  const [reportHistoryLoading, setReportHistoryLoading] = useState(false);
+  const [reportHistoryError, setReportHistoryError] = useState("");
+  const [downloadingReportId, setDownloadingReportId] = useState<string | null>(
+    null
+  );
 
   async function checkAuthentication() {
     try {
@@ -471,6 +671,104 @@ export default function GestionPanel() {
     }
   }
 
+  async function loadReportHistory() {
+    setReportHistoryLoading(true);
+    setReportHistoryError("");
+
+    try {
+      const response = await fetch("/api/gestion/reports/history?limit=100", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      const data = (await response.json()) as ReportHistoryResponse;
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        setReportHistoryError(
+          data.error || "No se pudo cargar el historial de informes."
+        );
+        return;
+      }
+
+      setReportHistory(data.reports || []);
+    } catch {
+      setReportHistoryError("No se pudo cargar el historial de informes.");
+    } finally {
+      setReportHistoryLoading(false);
+    }
+  }
+
+  async function handleDownloadReport(report: ReportHistoryItem) {
+    if (
+      downloadingReportId ||
+      report.status !== "completed" ||
+      !report.fileName
+    ) {
+      return;
+    }
+
+    setDownloadingReportId(report.id);
+    setReportHistoryError("");
+
+    try {
+      const response = await fetch(
+        `/api/gestion/reports/history/download?id=${encodeURIComponent(
+          report.id
+        )}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      if (response.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
+
+      if (!response.ok) {
+        let message = "No se pudo descargar el informe.";
+
+        try {
+          const data = (await response.json()) as { error?: string };
+
+          if (data.error) {
+            message = data.error;
+          }
+        } catch {
+          // La respuesta puede no ser JSON.
+        }
+
+        setReportHistoryError(message);
+        return;
+      }
+
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = objectUrl;
+      link.download = report.fileName;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(objectUrl);
+      }, 1000);
+    } catch {
+      setReportHistoryError("No se pudo descargar el informe.");
+    } finally {
+      setDownloadingReportId(null);
+    }
+  }
+
   useEffect(() => {
     checkAuthentication();
   }, []);
@@ -486,76 +784,19 @@ export default function GestionPanel() {
       return `${year}-${month}-${day}`;
     };
 
-    const getPeriodDates = (period: ReportPeriod) => {
-      const current = new Date(today);
+    const from = new Date(today);
+    from.setDate(from.getDate() - 6);
 
-      if (period === "last7") {
-        const from = new Date(current);
-        from.setDate(from.getDate() - 6);
-
-        return {
-          from: formatLocalDate(from),
-          to: formatLocalDate(current),
-        };
-      }
-
-      if (period === "last30") {
-        const from = new Date(current);
-        from.setDate(from.getDate() - 29);
-
-        return {
-          from: formatLocalDate(from),
-          to: formatLocalDate(current),
-        };
-      }
-
-      if (period === "thisMonth") {
-        const from = new Date(
-          current.getFullYear(),
-          current.getMonth(),
-          1
-        );
-
-        return {
-          from: formatLocalDate(from),
-          to: formatLocalDate(current),
-        };
-      }
-
-      if (period === "previousMonth") {
-        const from = new Date(
-          current.getFullYear(),
-          current.getMonth() - 1,
-          1
-        );
-
-        const to = new Date(
-          current.getFullYear(),
-          current.getMonth(),
-          0
-        );
-
-        return {
-          from: formatLocalDate(from),
-          to: formatLocalDate(to),
-        };
-      }
-
-      return {
-        from: reportFrom,
-        to: reportTo,
-      };
-    };
-
-    const dates = getPeriodDates("last7");
-
-    setReportFrom(dates.from);
-    setReportTo(dates.to);
+    setReportFrom(formatLocalDate(from));
+    setReportTo(formatLocalDate(today));
   }, []);
 
   useEffect(() => {
     if (authenticated) {
       loadBusinesses();
+      loadReportHistory();
+    } else {
+      setReportHistory([]);
     }
   }, [authenticated]);
 
@@ -603,6 +844,8 @@ export default function GestionPanel() {
       setSummary(emptySummary);
       setStatsByBusiness({});
       setDailyActivity([]);
+      setReportHistory([]);
+      setReportHistoryError("");
       setForm(emptyForm);
       setEditingId(null);
       setFormOpen(false);
@@ -651,11 +894,7 @@ export default function GestionPanel() {
     }
 
     if (period === "thisMonth") {
-      const from = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        1
-      );
+      const from = new Date(today.getFullYear(), today.getMonth(), 1);
 
       setReportFrom(formatLocalDate(from));
       setReportTo(formatLocalDate(today));
@@ -663,17 +902,8 @@ export default function GestionPanel() {
     }
 
     if (period === "previousMonth") {
-      const from = new Date(
-        today.getFullYear(),
-        today.getMonth() - 1,
-        1
-      );
-
-      const to = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        0
-      );
+      const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const to = new Date(today.getFullYear(), today.getMonth(), 0);
 
       setReportFrom(formatLocalDate(from));
       setReportTo(formatLocalDate(to));
@@ -735,7 +965,6 @@ export default function GestionPanel() {
       }
 
       const blob = await response.blob();
-
       const contentDisposition = response.headers.get("Content-Disposition");
 
       let filename = `TOCA_Informes_${reportFrom}_${reportTo}.zip`;
@@ -747,7 +976,6 @@ export default function GestionPanel() {
       }
 
       const url = window.URL.createObjectURL(blob);
-
       const link = document.createElement("a");
 
       link.href = url;
@@ -757,28 +985,29 @@ export default function GestionPanel() {
       link.click();
       link.remove();
 
-      window.URL.revokeObjectURL(url);
+      window.setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
 
       const generated = response.headers.get("X-TOCA-Reports-Generated");
-
       const failed = response.headers.get("X-TOCA-Reports-Failed");
 
       if (failed && Number(failed) > 0) {
         setReportSuccess(
           `ZIP generado: ${generated || "varios"} informes correctamente. ` +
-            `${failed} negocio${
-              Number(failed) === 1 ? "" : "s"
-            } tuvo${
-              Number(failed) === 1 ? "" : "ieron"
-            } un error. Consulta TOCA_Resumen.txt.`
+          `${failed} negocio${Number(failed) === 1 ? "" : "s"
+          } tuvo${Number(failed) === 1 ? "" : "ieron"} un error. ` +
+          "Consulta TOCA_Resumen.txt."
         );
       } else {
         setReportSuccess(
-          `ZIP generado correctamente con ${
-            generated || "todos los"
+          `ZIP generado correctamente con ${generated || "todos los"
           } informes.`
         );
       }
+
+      // Actualizar el historial DESPUÉS de generar el ZIP.
+      await loadReportHistory();
     } catch {
       setReportError("No se han podido generar los informes.");
     } finally {
@@ -788,15 +1017,11 @@ export default function GestionPanel() {
 
   function scrollToForm() {
     window.setTimeout(() => {
-      const formSection = document.querySelector(
-        `.${styles.formSection}`
-      );
+      const formSection = document.querySelector(`.${styles.formSection}`);
 
       if (formSection instanceof HTMLElement) {
         const top =
-          formSection.getBoundingClientRect().top +
-          window.scrollY -
-          18;
+          formSection.getBoundingClientRect().top + window.scrollY - 18;
 
         window.scrollTo({
           top,
@@ -920,8 +1145,8 @@ export default function GestionPanel() {
 
     const confirmed = window.confirm(
       `¿Seguro que quieres desactivar "${businessName}"?\n\n` +
-        "Su página pública dejará de estar disponible, " +
-        "pero sus estadísticas se conservarán."
+      "Su página pública dejará de estar disponible, " +
+      "pero sus estadísticas se conservarán."
     );
 
     if (!confirmed) {
@@ -984,8 +1209,8 @@ export default function GestionPanel() {
 
     const confirmed = window.confirm(
       `¿Quieres reactivar "${businessName}"?\n\n` +
-        "Su página pública volverá a estar disponible " +
-        "y conservará sus estadísticas."
+      "Su página pública volverá a estar disponible " +
+      "y conservará sus estadísticas."
     );
 
     if (!confirmed) {
@@ -1025,7 +1250,7 @@ export default function GestionPanel() {
 
       setSuccess(
         "Negocio reactivado correctamente. " +
-          "Su página pública vuelve a estar disponible."
+        "Su página pública vuelve a estar disponible."
       );
 
       await loadBusinesses();
@@ -1047,8 +1272,8 @@ export default function GestionPanel() {
 
     const confirmed = window.confirm(
       `¿Seguro que quieres eliminar "${form.name}"?\n\n` +
-        "Su página pública dejará de estar disponible, " +
-        "pero sus estadísticas se conservarán."
+      "Su página pública dejará de estar disponible, " +
+      "pero sus estadísticas se conservarán."
     );
 
     if (!confirmed) {
@@ -1285,7 +1510,6 @@ export default function GestionPanel() {
 
               <div className={styles.dashboardStatContent}>
                 <span>Negocios activos</span>
-
                 <strong>{summary.active}</strong>
 
                 <p>
@@ -1305,7 +1529,6 @@ export default function GestionPanel() {
 
               <div className={styles.dashboardStatContent}>
                 <span>Negocios inactivos</span>
-
                 <strong>{summary.inactive}</strong>
 
                 <p>
@@ -1318,14 +1541,12 @@ export default function GestionPanel() {
 
             <article className={styles.dashboardStat}>
               <div className={styles.dashboardStatIcon}>
-                <ExternalIcon />
+                <EyeIcon />
               </div>
 
               <div className={styles.dashboardStatContent}>
                 <span>Visitas totales</span>
-
                 <strong>{formatNumber(summary.visits)}</strong>
-
                 <p>Actividad registrada en las páginas</p>
               </div>
             </article>
@@ -1339,9 +1560,7 @@ export default function GestionPanel() {
 
               <div className={styles.dashboardStatContent}>
                 <span>Interacciones</span>
-
                 <strong>{formatNumber(summary.googleClicks)}</strong>
-
                 <p>Clics registrados hacia Google</p>
               </div>
             </article>
@@ -1376,9 +1595,7 @@ export default function GestionPanel() {
             {dailyActivity.length === 0 ? (
               <div className={styles.activityEmpty}>
                 <ActivityIcon />
-
                 <p>Aún no hay actividad registrada.</p>
-
                 <span>
                   Cuando tus páginas reciban visitas, aparecerán aquí.
                 </span>
@@ -1393,10 +1610,7 @@ export default function GestionPanel() {
                     (activity.googleClicks / maxActivity) * 100;
 
                   return (
-                    <div
-                      className={styles.activityRow}
-                      key={activity.date}
-                    >
+                    <div className={styles.activityRow} key={activity.date}>
                       <span className={styles.activityDate}>
                         {formatActivityDate(activity.date)}
                       </span>
@@ -1406,10 +1620,10 @@ export default function GestionPanel() {
                           <span
                             className={`${styles.activityBar} ${styles.activityBarVisits}`}
                             style={{
-                              width: `${Math.max(
-                                activity.visits > 0 ? visitsWidth : 0,
-                                activity.visits > 0 ? 3 : 0
-                              )}%`,
+                              width: `${activity.visits > 0
+                                  ? Math.max(visitsWidth, 3)
+                                  : 0
+                                }%`,
                             }}
                           />
                         </div>
@@ -1418,12 +1632,10 @@ export default function GestionPanel() {
                           <span
                             className={`${styles.activityBar} ${styles.activityBarClicks}`}
                             style={{
-                              width: `${Math.max(
-                                activity.googleClicks > 0
-                                  ? clicksWidth
-                                  : 0,
-                                activity.googleClicks > 0 ? 3 : 0
-                              )}%`,
+                              width: `${activity.googleClicks > 0
+                                  ? Math.max(clicksWidth, 3)
+                                  : 0
+                                }%`,
                             }}
                           />
                         </div>
@@ -1431,10 +1643,7 @@ export default function GestionPanel() {
 
                       <div className={styles.activityValues}>
                         <strong>{formatNumber(activity.visits)}</strong>
-
-                        <span>
-                          {formatNumber(activity.googleClicks)}
-                        </span>
+                        <span>{formatNumber(activity.googleClicks)}</span>
                       </div>
                     </div>
                   );
@@ -1444,11 +1653,12 @@ export default function GestionPanel() {
           </div>
         </section>
 
+        {/* GENERADOR DE INFORMES */}
         <section className={styles.reportsSection}>
           <div className={styles.sectionHeading}>
             <div className={styles.sectionHeadingMain}>
               <div className={styles.sectionIcon}>
-                <ChartIcon />
+                <DocumentIcon />
               </div>
 
               <div>
@@ -1470,7 +1680,6 @@ export default function GestionPanel() {
                 </span>
 
                 <h3>Periodo del informe</h3>
-
                 <p>¿Qué actividad quieres analizar?</p>
               </div>
 
@@ -1608,7 +1817,7 @@ export default function GestionPanel() {
                   </>
                 ) : (
                   <>
-                    <ChartIcon />
+                    <AddDocumentIcon />
                     <span>Generar informes</span>
                     <ArrowIcon />
                   </>
@@ -1618,7 +1827,7 @@ export default function GestionPanel() {
 
             <div className={styles.reportOutput}>
               <div className={styles.reportOutputIcon}>
-                <ChartIcon />
+                <DocumentIcon />
               </div>
 
               <div className={styles.reportOutputText}>
@@ -1627,11 +1836,9 @@ export default function GestionPanel() {
                 <span>
                   {summary.active === 0
                     ? "Crea o reactiva un negocio para comenzar."
-                    : `${summary.active} negocio${
-                        summary.active === 1 ? "" : "s"
-                      } activo${
-                        summary.active === 1 ? "" : "s"
-                      } · un PDF individual por cada uno · un único ZIP para descargar.`}
+                    : `${summary.active
+                    } negocio${summary.active === 1 ? "" : "s"} activo${summary.active === 1 ? "" : "s"
+                    } · un PDF individual por cada uno · un único ZIP para descargar.`}
                 </span>
               </div>
 
@@ -1654,6 +1861,134 @@ export default function GestionPanel() {
           </div>
         </section>
 
+        {/* HISTORIAL DE INFORMES */}
+        <section className={styles.reportsSection}>
+          <div className={styles.sectionHeading}>
+            <div className={styles.sectionHeadingMain}>
+              <div className={styles.sectionIcon}>
+                <HistoryIcon />
+              </div>
+
+              <div>
+                <span className={styles.sectionLabel}>Archivo</span>
+                <h2>Historial de informes</h2>
+                <p>
+                  Consulta los informes anteriores y descarga de nuevo los ZIP
+                  que ya hayas generado.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={styles.secondaryAction}
+              onClick={loadReportHistory}
+              disabled={reportHistoryLoading}
+            >
+              <RefreshIcon />
+              <span>
+                {reportHistoryLoading ? "Actualizando..." : "Actualizar"}
+              </span>
+            </button>
+          </div>
+
+          <div className={styles.reportsCard}>
+            {reportHistoryError && (
+              <div className={styles.formError}>
+                <AlertIcon />
+                <span>{reportHistoryError}</span>
+              </div>
+            )}
+
+            {reportHistoryLoading && reportHistory.length === 0 ? (
+              <div className={styles.activityEmpty}>
+                <span className={styles.spinner} />
+                <p>Cargando historial...</p>
+              </div>
+            ) : reportHistory.length === 0 ? (
+              <div className={styles.activityEmpty}>
+                <SearchDocumentIcon />
+                <p>Aún no hay informes guardados.</p>
+                <span>
+                  Cuando generes un informe, aparecerá aquí si se ha guardado
+                  correctamente.
+                </span>
+              </div>
+            ) : (
+              <div>
+                {reportHistory.map((report) => {
+                  const completed = report.status === "completed";
+
+                  const reportTypeLabel =
+                    report.reportType === "collective"
+                      ? "Informe colectivo"
+                      : "Informe individual";
+
+                  return (
+                    <div className={styles.reportOutput} key={report.id}>
+                      <div className={styles.reportOutputIcon}>
+                        <DocumentIcon />
+                      </div>
+
+                      <div className={styles.reportOutputText}>
+                        <strong>
+                          {report.fileName || reportTypeLabel}
+                        </strong>
+
+                        <span>{reportTypeLabel}</span>
+
+                        <span>
+                          Periodo: {formatDate(report.periodFrom)} –{" "}
+                          {formatDate(report.periodTo)}
+                        </span>
+
+                        <span>
+                          Generado: {formatDate(report.createdAt)} ·{" "}
+                          {formatNumber(report.businessCount)}{" "}
+                          {report.businessCount === 1 ? "negocio" : "negocios"}{" "}
+                          · {formatFileSize(report.fileSize)}
+                        </span>
+
+                        {!completed && (
+                          <span>
+                            {report.errorMessage ||
+                              "La generación no se completó correctamente."}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.reportOutputBadge}>
+                        {completed ? "ZIP" : "ERROR"}
+                      </div>
+
+                      <button
+                        type="button"
+                        className={styles.reportGenerateButton}
+                        onClick={() => handleDownloadReport(report)}
+                        disabled={
+                          !completed ||
+                          !report.fileName ||
+                          downloadingReportId !== null
+                        }
+                      >
+                        {downloadingReportId === report.id ? (
+                          "Descargando..."
+                        ) : (
+                          <>
+                            <DownloadIcon />
+                            <span>Descargar</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* DIRECTORIO DE NEGOCIOS */}
         <section className={styles.businessSection}>
           <div className={styles.sectionHeading}>
             <div className={styles.sectionHeadingMain}>
@@ -1815,9 +2150,8 @@ export default function GestionPanel() {
 
                 return (
                   <article
-                    className={`${styles.business} ${
-                      !business.active ? styles.businessInactive : ""
-                    }`}
+                    className={`${styles.business} ${!business.active ? styles.businessInactive : ""
+                      }`}
                     key={business.id}
                   >
                     <div className={styles.businessMain}>
@@ -1837,11 +2171,10 @@ export default function GestionPanel() {
 
                         <div className={styles.businessInfo}>
                           <span
-                            className={`${styles.businessStatus} ${
-                              !business.active
+                            className={`${styles.businessStatus} ${!business.active
                                 ? styles.businessStatusInactive
                                 : ""
-                            }`}
+                              }`}
                           >
                             {business.active
                               ? "Negocio activo"
@@ -1864,16 +2197,12 @@ export default function GestionPanel() {
 
                         <div>
                           <span>Interacciones</span>
-                          <strong>
-                            {formatNumber(stats.googleClicks)}
-                          </strong>
+                          <strong>{formatNumber(stats.googleClicks)}</strong>
                         </div>
 
                         <div>
                           <span>Última actividad</span>
-                          <strong>
-                            {formatDate(stats.lastActivity)}
-                          </strong>
+                          <strong>{formatDate(stats.lastActivity)}</strong>
                         </div>
 
                         <div>
@@ -1965,6 +2294,7 @@ export default function GestionPanel() {
           )}
         </section>
 
+        {/* FORMULARIO DE NEGOCIO */}
         {formOpen && (
           <section className={styles.formSection}>
             <div className={styles.sectionHeading}>
@@ -2035,8 +2365,7 @@ export default function GestionPanel() {
                   />
 
                   <span className={styles.help}>
-                    URL pública:{" "}
-                    <strong>/{form.slug || "..."}</strong>
+                    URL pública: <strong>/{form.slug || "..."}</strong>
                   </span>
                 </div>
 
@@ -2098,8 +2427,8 @@ export default function GestionPanel() {
                     <strong>Zona de peligro</strong>
 
                     <span>
-                      Desactiva este negocio y retira su página pública.
-                      Sus estadísticas se conservarán.
+                      Desactiva este negocio y retira su página pública. Sus
+                      estadísticas se conservarán.
                     </span>
                   </div>
 
@@ -2110,7 +2439,6 @@ export default function GestionPanel() {
                     className={styles.deleteButton}
                   >
                     <TrashIcon />
-
                     {deleting ? "Desactivando..." : "Desactivar negocio"}
                   </button>
                 </div>
@@ -2134,8 +2462,8 @@ export default function GestionPanel() {
                   {saving
                     ? "Guardando..."
                     : editingId
-                    ? "Guardar cambios"
-                    : "Crear negocio"}
+                      ? "Guardar cambios"
+                      : "Crear negocio"}
 
                   {!saving && !deleting && <ArrowIcon />}
                 </button>
@@ -2157,10 +2485,7 @@ export default function GestionPanel() {
       </div>
 
       {logoutConfirmOpen && (
-        <div
-          className={styles.logoutModalOverlay}
-          role="presentation"
-        >
+        <div className={styles.logoutModalOverlay} role="presentation">
           <div
             className={styles.logoutModal}
             role="dialog"

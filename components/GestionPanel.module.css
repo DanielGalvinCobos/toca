@@ -2448,4 +2448,30 @@
   .logoutConfirmButton {
     order: -1;
   }
+
+  .reportHistoryList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .reportHistoryActions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .reportHistoryActions {
+      align-items: stretch;
+      width: 100%;
+    }
+
+    .reportHistoryList>article {
+      flex-wrap: wrap;
+    }
+  }
 }

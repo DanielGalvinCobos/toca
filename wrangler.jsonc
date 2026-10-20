@@ -29,5 +29,11 @@
 			"database_name": "toca-analytics",
 			"database_id": "18cbb88d-5149-4c4b-94aa-f0807987a1cf"
 		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "REPORT_HISTORY",
+			"bucket_name": "toca-report-history"
+		}
 	]
 }

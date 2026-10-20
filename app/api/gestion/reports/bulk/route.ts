@@ -14,12 +14,15 @@ const VALID_SOURCES = ["nfc", "qr", "direct"] as const;
 
 type ValidSource = (typeof VALID_SOURCES)[number];
 
-function isValidDate(value: string | null): boolean {
-  if (!value) {
-    return false;
-  }
+type BusinessResult = {
+  id: string;
+  name: string;
+  included: boolean;
+  error: string | null;
+};
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+function isValidDate(value: string | null): boolean {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
 
@@ -33,7 +36,6 @@ function isValidDate(value: string | null): boolean {
 
 function formatDateForFilename(value: string): string {
   const [year, month, day] = value.split("-");
-
   return `${day}-${month}-${year}`;
 }
 
@@ -46,24 +48,12 @@ function sanitizeFilename(value: string): string {
 
 function createEmptySourceStats() {
   return {
-    nfc: {
-      visits: 0,
-      googleClicks: 0,
-    },
-    qr: {
-      visits: 0,
-      googleClicks: 0,
-    },
-    direct: {
-      visits: 0,
-      googleClicks: 0,
-    },
+    nfc: { visits: 0, googleClicks: 0 },
+    qr: { visits: 0, googleClicks: 0 },
+    direct: { visits: 0, googleClicks: 0 },
   } satisfies Record<
     ValidSource,
-    {
-      visits: number;
-      googleClicks: number;
-    }
+    { visits: number; googleClicks: number }
   >;
 }
 
@@ -105,7 +95,6 @@ async function buildReportData(
   let lastActivity: string | null = null;
 
   const sourceStats = createEmptySourceStats();
-
   const daily: ReportDailyRow[] = [];
 
   for (const row of rows) {
@@ -156,38 +145,107 @@ async function buildReportData(
   };
 }
 
+async function saveHistory(
+  reportId: string,
+  from: string,
+  to: string,
+  businesses: BusinessResult[],
+  details: {
+    status: "completed" | "failed";
+    storageKey?: string | null;
+    filename?: string | null;
+    fileSize?: number | null;
+    errorMessage?: string | null;
+  },
+): Promise<void> {
+  const includedCount = businesses.filter(
+    (business) => business.included,
+  ).length;
+
+  const statements = [
+    env.toca_analytics
+      .prepare(
+        `
+          INSERT INTO report_history (
+            id,
+            report_type,
+            period_from,
+            period_to,
+            status,
+            storage_key,
+            file_name,
+            content_type,
+            file_size,
+            business_count,
+            error_message
+          )
+          VALUES (?, 'collective', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+      )
+      .bind(
+        reportId,
+        from,
+        to,
+        details.status,
+        details.storageKey ?? null,
+        details.filename ?? null,
+        details.filename ? "application/zip" : null,
+        details.fileSize ?? null,
+        includedCount,
+        details.errorMessage ?? null,
+      ),
+    ...businesses.map((business) =>
+      env.toca_analytics
+        .prepare(
+          `
+            INSERT INTO report_history_businesses (
+              report_id,
+              business_id,
+              business_name,
+              included,
+              exclusion_reason
+            )
+            VALUES (?, ?, ?, ?, ?)
+          `,
+        )
+        .bind(
+          reportId,
+          business.id,
+          business.name,
+          business.included ? 1 : 0,
+          business.error,
+        ),
+    ),
+  ];
+
+  await env.toca_analytics.batch(statements);
+}
+
 export async function GET(request: Request) {
+  let from: string | null = null;
+  let to: string | null = null;
+
   try {
     if (!(await isAuthenticated(request))) {
-      return new Response("No autorizado", {
-        status: 401,
-      });
+      return new Response("No autorizado", { status: 401 });
     }
 
     const url = new URL(request.url);
 
-    const from = url.searchParams.get("from");
-    const to = url.searchParams.get("to");
+    from = url.searchParams.get("from");
+    to = url.searchParams.get("to");
 
     if (!from || !to) {
       return Response.json(
-        {
-          error: "Debes indicar from y to.",
-        },
-        {
-          status: 400,
-        },
+        { error: "Debes indicar from y to." },
+        { status: 400 },
       );
     }
 
     if (!isValidDate(from) || !isValidDate(to)) {
       return Response.json(
-        {
-          error: "Las fechas deben tener el formato YYYY-MM-DD.",
-        },
-        {
-          status: 400,
-        },
+        { error: "Las fechas deben tener el formato YYYY-MM-DD." },
+        { status: 400 },
       );
     }
 
@@ -196,9 +254,7 @@ export async function GET(request: Request) {
         {
           error: "La fecha inicial no puede ser posterior a la fecha final.",
         },
-        {
-          status: 400,
-        },
+        { status: 400 },
       );
     }
 
@@ -206,22 +262,14 @@ export async function GET(request: Request) {
 
     if (businesses.length === 0) {
       return Response.json(
-        {
-          error: "No hay negocios activos para generar informes.",
-        },
-        {
-          status: 400,
-        },
+        { error: "No hay negocios activos para generar informes." },
+        { status: 400 },
       );
     }
 
+    const reportId = crypto.randomUUID();
+    const businessResults: BusinessResult[] = [];
     const files: Record<string, Uint8Array> = {};
-
-    const successfulBusinesses: string[] = [];
-    const failedBusinesses: {
-      name: string;
-      error: string;
-    }[] = [];
 
     for (const business of businesses) {
       try {
@@ -241,21 +289,61 @@ export async function GET(request: Request) {
 
         files[filename] = pdfBytes;
 
-        successfulBusinesses.push(business.name);
+        businessResults.push({
+          id: business.id,
+          name: business.name,
+          included: true,
+          error: null,
+        });
       } catch (error) {
         console.error(
           `Error generando informe de ${business.name}:`,
           error,
         );
 
-        failedBusinesses.push({
+        businessResults.push({
+          id: business.id,
           name: business.name,
+          included: false,
           error:
             error instanceof Error
               ? error.message
               : "Error desconocido",
         });
       }
+    }
+
+    const successfulBusinesses = businessResults.filter(
+      (business) => business.included,
+    );
+
+    const failedBusinesses = businessResults.filter(
+      (business) => !business.included,
+    );
+
+    if (successfulBusinesses.length === 0) {
+      try {
+        await saveHistory(reportId, from, to, businessResults, {
+          status: "failed",
+          errorMessage: "No se ha podido generar ningún informe.",
+        });
+      } catch (historyError) {
+        console.error(
+          "No se pudo guardar el historial del informe fallido:",
+          historyError,
+        );
+      }
+
+      return Response.json(
+        {
+          error: "No se ha podido generar ningún informe.",
+          failedBusinesses: failedBusinesses.map((business) => ({
+            name: business.name,
+            error: business.error,
+          })),
+        },
+        { status: 500 },
+      );
     }
 
     const summaryLines = [
@@ -271,15 +359,13 @@ export async function GET(request: Request) {
       "",
       "INFORMES GENERADOS",
       "------------------------------",
-      ...(successfulBusinesses.length > 0
-        ? successfulBusinesses.map((name) => `✓ ${name}`)
-        : ["Ninguno"]),
+      ...successfulBusinesses.map((business) => `✓ ${business.name}`),
       "",
       "INFORMES CON ERROR",
       "------------------------------",
       ...(failedBusinesses.length > 0
         ? failedBusinesses.map(
-            (item) => `✗ ${item.name}: ${item.error}`,
+            (business) => `✗ ${business.name}: ${business.error}`,
           )
         : ["Ninguno"]),
       "",
@@ -290,27 +376,67 @@ export async function GET(request: Request) {
       summaryLines.join("\n"),
     );
 
-    if (successfulBusinesses.length === 0) {
+    const zipBytes = zipSync(files, { level: 6 });
+
+    const filename =
+      `TOCA_Informes_${formatDateForFilename(from)}` +
+      `_${formatDateForFilename(to)}.zip`;
+
+    const storageKey = `reports/${reportId}/${filename}`;
+
+    try {
+      await env.REPORT_HISTORY.put(storageKey, zipBytes, {
+        httpMetadata: {
+          contentType: "application/zip",
+        },
+      });
+
+      await saveHistory(reportId, from, to, businessResults, {
+        status: "completed",
+        storageKey,
+        filename,
+        fileSize: zipBytes.byteLength,
+        errorMessage:
+          failedBusinesses.length > 0
+            ? `${failedBusinesses.length} negocio(s) no pudieron generar su PDF.`
+            : null,
+      });
+    } catch (storageError) {
+      console.error(
+        "Error guardando el informe en el historial:",
+        storageError,
+      );
+
+      try {
+        await env.REPORT_HISTORY.delete(storageKey);
+      } catch (cleanupError) {
+        console.error(
+          "No se pudo eliminar el archivo sin registrar:",
+          cleanupError,
+        );
+      }
+
+      try {
+        await saveHistory(reportId, from, to, businessResults, {
+          status: "failed",
+          errorMessage:
+            "No se pudo almacenar el archivo o registrar el historial.",
+        });
+      } catch (historyError) {
+        console.error(
+          "No se pudo guardar el registro del error:",
+          historyError,
+        );
+      }
+
       return Response.json(
         {
           error:
-            "No se ha podido generar ningún informe.",
-          failedBusinesses,
+            "Se generaron los informes, pero no se pudieron guardar en el historial. Inténtalo de nuevo.",
         },
-        {
-          status: 500,
-        },
+        { status: 500 },
       );
     }
-
-    const zipBytes = zipSync(files, {
-      level: 6,
-    });
-
-    const filename =
-      `TOCA_Informes_` +
-      `${formatDateForFilename(from)}_` +
-      `${formatDateForFilename(to)}.zip`;
 
     return new Response(zipBytes, {
       status: 200,
@@ -327,19 +453,11 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error(
-      "Error generando informes masivos:",
-      error,
-    );
+    console.error("Error generando informes masivos:", error);
 
     return Response.json(
-      {
-        error:
-          "No se han podido generar los informes masivos.",
-      },
-      {
-        status: 500,
-      },
+      { error: "No se han podido generar los informes masivos." },
+      { status: 500 },
     );
   }
 }
