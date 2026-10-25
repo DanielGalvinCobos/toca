@@ -1,0 +1,214 @@
+
+/* TOCA · Navegación refinada */
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #e8eaf2;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(31, 41, 55, 0.035);
+}
+
+.link {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 11px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #626779;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.link:hover {
+  background: #f7f7fc;
+  color: #4f46e5;
+}
+
+.link:focus-visible {
+  outline: 2px solid #6366F1;
+  outline-offset: 2px;
+}
+
+.active {
+  border-color: rgba(99, 102, 241, 0.14);
+  background: rgba(99, 102, 241, 0.09);
+  color: #4f46e5;
+  font-weight: 700;
+}
+
+.active::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: -1px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #6366F1;
+  content: "";
+}
+
+.icon {
+  display: inline-flex;
+  flex: 0 0 28px;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #eceef4;
+  border-radius: 8px;
+  background: #fafbfe;
+  color: #73788b;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.active .icon {
+  border-color: rgba(99, 102, 241, 0.16);
+  background: #ffffff;
+  color: #6366F1;
+}
+
+.link:hover .icon {
+  border-color: rgba(99, 102, 241, 0.18);
+  color: #6366F1;
+}
+
+/* Tablet y móvil */
+
+@media (max-width: 1100px) {
+  .nav {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 5px;
+    padding: 6px;
+    overflow-x: auto;
+    border-radius: 13px;
+    scrollbar-width: thin;
+  }
+
+  .link {
+    flex: 0 0 auto;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 7px 10px;
+    font-size: 0.8rem;
+  }
+
+  .icon {
+    flex-basis: 25px;
+    width: 25px;
+    height: 25px;
+    font-size: 0.9rem;
+  }
+
+  .active::before {
+    top: auto;
+    right: 9px;
+    bottom: 0;
+    left: 9px;
+    width: auto;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .link {
+    gap: 5px;
+    padding-right: 8px;
+    padding-left: 8px;
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link {
+    transition: none;
+  }
+}
+
+
+/* TOCA · Ajustes de iconografía y navegación */
+
+.icon svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+}
+
+.linkLabel {
+  min-width: 0;
+}
+
+/* La navegación permanece por encima del contenido al desplazarse. */
+@media (min-width: 1101px) {
+  .nav {
+    position: relative;
+  }
+}
+
+/* Navegación horizontal en tablet y móvil */
+@media (max-width: 1100px) {
+  .nav {
+    gap: 5px;
+    background: #ffffff;
+  }
+
+  .link {
+    flex: 0 0 auto;
+  }
+
+  .icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .nav {
+    gap: 3px;
+    padding: 5px;
+  }
+
+  .link {
+    gap: 5px;
+    min-height: 40px;
+    padding: 6px 8px;
+    font-size: 0.76rem;
+  }
+
+  .icon {
+    flex-basis: 23px;
+    width: 23px;
+    height: 23px;
+  }
+
+  .icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+

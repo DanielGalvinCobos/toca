@@ -1,3 +1,4 @@
+
 import { env } from "cloudflare:workers";
 
 export type Business = {
@@ -8,6 +9,7 @@ export type Business = {
   logoUrl?: string;
   createdAt: string;
   active: boolean;
+  archivedAt?: string;
 };
 
 function mapBusiness(row: Record<string, unknown>): Business {
@@ -16,11 +18,12 @@ function mapBusiness(row: Record<string, unknown>): Business {
     name: String(row.name),
     slug: String(row.slug),
     googleReviewUrl: String(row.google_review_url),
-    logoUrl: row.logo_url
-      ? String(row.logo_url)
-      : undefined,
+    logoUrl: row.logo_url ? String(row.logo_url) : undefined,
     createdAt: String(row.created_at),
     active: Number(row.active) === 1,
+    archivedAt: row.archived_at
+      ? String(row.archived_at)
+      : undefined,
   };
 }
 
@@ -33,22 +36,28 @@ function getMadridToday() {
   }).format(new Date());
 }
 
+const BUSINESS_SELECT = `
+  SELECT
+    id,
+    name,
+    slug,
+    google_review_url,
+    logo_url,
+    created_at,
+    active,
+    archived_at
+  FROM businesses
+`;
+
 export async function getBusinessBySlug(
   slug: string
 ): Promise<Business | undefined> {
   const result = await env.toca_analytics
     .prepare(`
-      SELECT
-        id,
-        name,
-        slug,
-        google_review_url,
-        logo_url,
-        created_at,
-        active
-      FROM businesses
+      ${BUSINESS_SELECT}
       WHERE slug = ?
         AND active = 1
+        AND archived_at IS NULL
       LIMIT 1
     `)
     .bind(slug)
@@ -66,15 +75,7 @@ export async function getBusinessBySlugIncludingInactive(
 ): Promise<Business | undefined> {
   const result = await env.toca_analytics
     .prepare(`
-      SELECT
-        id,
-        name,
-        slug,
-        google_review_url,
-        logo_url,
-        created_at,
-        active
-      FROM businesses
+      ${BUSINESS_SELECT}
       WHERE slug = ?
       LIMIT 1
     `)
@@ -93,15 +94,7 @@ export async function getBusinessById(
 ): Promise<Business | undefined> {
   const result = await env.toca_analytics
     .prepare(`
-      SELECT
-        id,
-        name,
-        slug,
-        google_review_url,
-        logo_url,
-        created_at,
-        active
-      FROM businesses
+      ${BUSINESS_SELECT}
       WHERE id = ?
       LIMIT 1
     `)
@@ -118,16 +111,9 @@ export async function getBusinessById(
 export async function getAllBusinesses(): Promise<Business[]> {
   const result = await env.toca_analytics
     .prepare(`
-      SELECT
-        id,
-        name,
-        slug,
-        google_review_url,
-        logo_url,
-        created_at,
-        active
-      FROM businesses
+      ${BUSINESS_SELECT}
       WHERE active = 1
+        AND archived_at IS NULL
       ORDER BY name ASC
     `)
     .all();
@@ -138,22 +124,17 @@ export async function getAllBusinesses(): Promise<Business[]> {
 }
 
 /**
- * Devuelve todos los negocios para el panel privado de gestión,
- * incluidos los que están desactivados.
+ * Devuelve todos los negocios para el panel privado,
+ * incluidos los desactivados y los archivados.
  */
 export async function getAllBusinessesForManagement(): Promise<Business[]> {
   const result = await env.toca_analytics
     .prepare(`
-      SELECT
-        id,
-        name,
-        slug,
-        google_review_url,
-        logo_url,
-        created_at,
-        active
-      FROM businesses
-      ORDER BY active DESC, name ASC
+      ${BUSINESS_SELECT}
+      ORDER BY
+        CASE WHEN archived_at IS NOT NULL THEN 1 ELSE 0 END ASC,
+        active DESC,
+        name ASC
     `)
     .all();
 
@@ -202,6 +183,7 @@ export async function createBusiness(data: {
     logoUrl: data.logoUrl || undefined,
     createdAt,
     active: true,
+    archivedAt: undefined,
   };
 }
 
@@ -222,6 +204,7 @@ export async function updateBusiness(data: {
         logo_url = ?
       WHERE id = ?
         AND active = 1
+        AND archived_at IS NULL
       RETURNING
         id,
         name,
@@ -229,7 +212,8 @@ export async function updateBusiness(data: {
         google_review_url,
         logo_url,
         created_at,
-        active
+        active,
+        archived_at
     `)
     .bind(
       data.name,
@@ -247,6 +231,10 @@ export async function updateBusiness(data: {
   return mapBusiness(result as Record<string, unknown>);
 }
 
+/**
+ * Desactiva un negocio sin archivarlo.
+ * Sus datos e historial estadístico se conservan.
+ */
 export async function deactivateBusiness(
   id: string
 ): Promise<boolean> {
@@ -256,6 +244,7 @@ export async function deactivateBusiness(
       SET active = 0
       WHERE id = ?
         AND active = 1
+        AND archived_at IS NULL
     `)
     .bind(id)
     .run();
@@ -263,6 +252,9 @@ export async function deactivateBusiness(
   return result.meta.changes > 0;
 }
 
+/**
+ * Activa un negocio únicamente si no está archivado.
+ */
 export async function activateBusiness(
   id: string
 ): Promise<boolean> {
@@ -272,6 +264,53 @@ export async function activateBusiness(
       SET active = 1
       WHERE id = ?
         AND active = 0
+        AND archived_at IS NULL
+    `)
+    .bind(id)
+    .run();
+
+  return result.meta.changes > 0;
+}
+
+/**
+ * Archiva un negocio y lo desactiva.
+ * No elimina el negocio ni sus estadísticas.
+ */
+export async function archiveBusiness(
+  id: string
+): Promise<boolean> {
+  const archivedAt = new Date().toISOString();
+
+  const result = await env.toca_analytics
+    .prepare(`
+      UPDATE businesses
+      SET
+        active = 0,
+        archived_at = ?
+      WHERE id = ?
+        AND archived_at IS NULL
+    `)
+    .bind(archivedAt, id)
+    .run();
+
+  return result.meta.changes > 0;
+}
+
+/**
+ * Restaura un negocio archivado como inactivo.
+ * Para publicarlo de nuevo será necesario activarlo expresamente.
+ */
+export async function restoreBusiness(
+  id: string
+): Promise<boolean> {
+  const result = await env.toca_analytics
+    .prepare(`
+      UPDATE businesses
+      SET
+        archived_at = NULL,
+        active = 0
+      WHERE id = ?
+        AND archived_at IS NOT NULL
     `)
     .bind(id)
     .run();

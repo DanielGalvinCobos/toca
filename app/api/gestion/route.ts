@@ -1,11 +1,14 @@
+
 import { env } from "cloudflare:workers";
 
 import { isAuthenticated } from "@/lib/analyticsAuth";
 import {
   activateBusiness,
+  archiveBusiness,
   createBusiness,
   deactivateBusiness,
   getAllBusinessesForManagement,
+  restoreBusiness,
   updateBusiness,
 } from "@/lib/businesses";
 
@@ -16,6 +19,8 @@ type BusinessBody = {
   googleReviewUrl?: string;
   logoUrl?: string;
 };
+
+type BusinessAction = "activate" | "archive" | "restore";
 
 function normalizeSlug(slug: string) {
   return slug
@@ -34,38 +39,28 @@ function validateBusinessData(body: BusinessBody) {
   const logoUrl = body.logoUrl?.trim();
 
   if (!name) {
-    return {
-      error: "El nombre del negocio es obligatorio.",
-    };
+    return { error: "El nombre del negocio es obligatorio." };
   }
 
   if (!slug) {
-    return {
-      error: "El slug es obligatorio.",
-    };
+    return { error: "El slug es obligatorio." };
   }
 
   if (!googleReviewUrl) {
-    return {
-      error: "La URL de Google es obligatoria.",
-    };
+    return { error: "La URL de Google es obligatoria." };
   }
 
   try {
     new URL(googleReviewUrl);
   } catch {
-    return {
-      error: "La URL de Google no es válida.",
-    };
+    return { error: "La URL de Google no es válida." };
   }
 
   if (logoUrl) {
     try {
       new URL(logoUrl);
     } catch {
-      return {
-        error: "La URL del logo no es válida.",
-      };
+      return { error: "La URL del logo no es válida." };
     }
   }
 
@@ -82,12 +77,8 @@ function validateBusinessData(body: BusinessBody) {
 export async function GET(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(
-      {
-        error: "No autorizado.",
-      },
-      {
-        status: 401,
-      }
+      { error: "No autorizado." },
+      { status: 401 }
     );
   }
 
@@ -158,22 +149,33 @@ export async function GET(request: Request) {
       }))
       .reverse();
 
-    const active = businesses.filter(
+    const nonArchivedBusinesses = businesses.filter(
+      (business) => !business.archivedAt
+    );
+
+    const active = nonArchivedBusinesses.filter(
       (business) => business.active
     ).length;
 
-    const inactive = businesses.length - active;
+    const inactive = nonArchivedBusinesses.filter(
+      (business) => !business.active
+    ).length;
 
     const visits = Number(totalsResult?.visits) || 0;
     const googleClicks =
       Number(totalsResult?.google_clicks) || 0;
+
+    const archived = businesses.filter(
+      (business) => Boolean(business.archivedAt)
+    ).length;
 
     return Response.json({
       businesses,
       summary: {
         active,
         inactive,
-        total: businesses.length,
+        total: nonArchivedBusinesses.length,
+        archived,
         visits,
         googleClicks,
         lastActivity: totalsResult?.last_activity
@@ -183,55 +185,44 @@ export async function GET(request: Request) {
       statsByBusiness,
       daily,
     });
-  } catch {
+
+  } catch (error) {
+    console.error("[GET /api/gestion] Error al obtener los datos:", error);
+
     return Response.json(
       {
         error: "No se pudieron obtener los datos de gestión.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
+
 }
 
 export async function POST(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(
-      {
-        error: "No autorizado.",
-      },
-      {
-        status: 401,
-      }
+      { error: "No autorizado." },
+      { status: 401 }
     );
   }
 
   try {
     const body = (await request.json()) as BusinessBody;
-
     const validation = validateBusinessData(body);
 
     if ("error" in validation) {
       return Response.json(
-        {
-          error: validation.error,
-        },
-        {
-          status: 400,
-        }
+        { error: validation.error },
+        { status: 400 }
       );
     }
 
     const business = await createBusiness(validation.data);
 
     return Response.json(
-      {
-        business,
-      },
-      {
-        status: 201,
-      }
+      { business },
+      { status: 201 }
     );
   } catch (error) {
     const message =
@@ -239,22 +230,14 @@ export async function POST(request: Request) {
 
     if (message.includes("UNIQUE constraint failed")) {
       return Response.json(
-        {
-          error: "Ese slug ya está siendo utilizado.",
-        },
-        {
-          status: 409,
-        }
+        { error: "Ese slug ya está siendo utilizado." },
+        { status: 409 }
       );
     }
 
     return Response.json(
-      {
-        error: "No se pudo crear el negocio.",
-      },
-      {
-        status: 500,
-      }
+      { error: "No se pudo crear el negocio." },
+      { status: 500 }
     );
   }
 }
@@ -262,12 +245,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(
-      {
-        error: "No autorizado.",
-      },
-      {
-        status: 401,
-      }
+      { error: "No autorizado." },
+      { status: 401 }
     );
   }
 
@@ -276,12 +255,8 @@ export async function PUT(request: Request) {
 
     if (!body.id?.trim()) {
       return Response.json(
-        {
-          error: "Falta el ID del negocio.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Falta el ID del negocio." },
+        { status: 400 }
       );
     }
 
@@ -289,12 +264,8 @@ export async function PUT(request: Request) {
 
     if ("error" in validation) {
       return Response.json(
-        {
-          error: validation.error,
-        },
-        {
-          status: 400,
-        }
+        { error: validation.error },
+        { status: 400 }
       );
     }
 
@@ -306,70 +277,52 @@ export async function PUT(request: Request) {
     if (!business) {
       return Response.json(
         {
-          error: "El negocio no existe o está inactivo.",
+          error:
+            "El negocio no existe, está inactivo o está archivado.",
         },
-        {
-          status: 404,
-        }
+        { status: 404 }
       );
     }
 
-    return Response.json({
-      business,
-    });
+    return Response.json({ business });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "";
 
     if (message.includes("UNIQUE constraint failed")) {
       return Response.json(
-        {
-          error: "Ese slug ya está siendo utilizado.",
-        },
-        {
-          status: 409,
-        }
+        { error: "Ese slug ya está siendo utilizado." },
+        { status: 409 }
       );
     }
 
     return Response.json(
-      {
-        error: "No se pudo actualizar el negocio.",
-      },
-      {
-        status: 500,
-      }
+      { error: "No se pudo actualizar el negocio." },
+      { status: 500 }
     );
   }
 }
 
+/**
+ * DELETE mantiene el comportamiento anterior:
+ * desactiva el negocio sin archivarlo ni eliminarlo.
+ */
 export async function DELETE(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(
-      {
-        error: "No autorizado.",
-      },
-      {
-        status: 401,
-      }
+      { error: "No autorizado." },
+      { status: 401 }
     );
   }
 
   try {
-    const body = (await request.json()) as {
-      id?: string;
-    };
-
+    const body = (await request.json()) as { id?: string };
     const id = body.id?.trim();
 
     if (!id) {
       return Response.json(
-        {
-          error: "Falta el ID del negocio.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Falta el ID del negocio." },
+        { status: 400 }
       );
     }
 
@@ -378,25 +331,18 @@ export async function DELETE(request: Request) {
     if (!deactivated) {
       return Response.json(
         {
-          error: "El negocio no existe o ya está eliminado.",
+          error:
+            "El negocio no existe, ya está desactivado o está archivado.",
         },
-        {
-          status: 404,
-        }
+        { status: 404 }
       );
     }
 
-    return Response.json({
-      success: true,
-    });
+    return Response.json({ success: true });
   } catch {
     return Response.json(
-      {
-        error: "No se pudo eliminar el negocio.",
-      },
-      {
-        status: 500,
-      }
+      { error: "No se pudo desactivar el negocio." },
+      { status: 500 }
     );
   }
 }
@@ -404,70 +350,75 @@ export async function DELETE(request: Request) {
 export async function PATCH(request: Request) {
   if (!(await isAuthenticated(request))) {
     return Response.json(
-      {
-        error: "No autorizado.",
-      },
-      {
-        status: 401,
-      }
+      { error: "No autorizado." },
+      { status: 401 }
     );
   }
 
   try {
     const body = (await request.json()) as {
       id?: string;
-      action?: string;
+      action?: BusinessAction | string;
     };
 
     const id = body.id?.trim();
 
     if (!id) {
       return Response.json(
-        {
-          error: "Falta el ID del negocio.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Falta el ID del negocio." },
+        { status: 400 }
       );
     }
 
-    if (body.action !== "activate") {
+    if (
+      body.action !== "activate" &&
+      body.action !== "archive" &&
+      body.action !== "restore"
+    ) {
       return Response.json(
-        {
-          error: "Acción no válida.",
-        },
-        {
-          status: 400,
-        }
+        { error: "Acción no válida." },
+        { status: 400 }
       );
     }
 
-    const activated = await activateBusiness(id);
+    let success = false;
+    let errorMessage = "No se pudo realizar la operación.";
 
-    if (!activated) {
+    switch (body.action) {
+      case "activate":
+        success = await activateBusiness(id);
+        errorMessage =
+          "No se pudo activar el negocio. Comprueba que exista, esté desactivado y no esté archivado.";
+        break;
+
+      case "archive":
+        success = await archiveBusiness(id);
+        errorMessage =
+          "No se pudo archivar el negocio. Puede que no exista o ya esté archivado.";
+        break;
+
+      case "restore":
+        success = await restoreBusiness(id);
+        errorMessage =
+          "No se pudo restaurar el negocio. Puede que no exista o no esté archivado.";
+        break;
+    }
+
+    if (!success) {
       return Response.json(
-        {
-          error:
-            "El negocio no existe o ya está activo.",
-        },
-        {
-          status: 404,
-        }
+        { error: errorMessage },
+        { status: 404 }
       );
     }
 
     return Response.json({
       success: true,
+      action: body.action,
     });
   } catch {
     return Response.json(
-      {
-        error: "No se pudo reactivar el negocio.",
-      },
-      {
-        status: 500,
-      }
+      { error: "No se pudo realizar la operación." },
+      { status: 500 }
     );
   }
 }

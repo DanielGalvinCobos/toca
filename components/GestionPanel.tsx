@@ -5,6 +5,8 @@ import Image from "next/image";
 
 import styles from "./GestionPanel.module.css";
 
+import GestionNav from "./GestionNav";
+
 type BusinessStats = {
   visits: number;
   googleClicks: number;
@@ -81,6 +83,18 @@ type ReportHistoryResponse = {
 };
 
 type StatusFilter = "all" | "active" | "inactive";
+
+
+type GestionSection =
+  | "resumen"
+  | "negocios"
+  | "estadisticas"
+  | "informes"
+  | "archivo";
+
+type GestionPanelProps = {
+  section?: GestionSection;
+};
 
 type ReportPeriod =
   | "last7"
@@ -308,6 +322,50 @@ function ChartIcon() {
     </svg>
   );
 }
+
+
+function DashboardIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+      <rect x="13.5" y="3.5" width="7" height="4" rx="1.5" />
+      <rect x="13.5" y="10.5" width="7" height="10" rx="1.5" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+    </svg>
+  );
+}
+
+function StatisticsIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 19.5h16" />
+      <rect x="5.5" y="11" width="3.5" height="6.5" rx="1" />
+      <rect x="10.5" y="7" width="3.5" height="10.5" rx="1" />
+      <rect x="15.5" y="3.5" width="3.5" height="14" rx="1" />
+    </svg>
+  );
+}
+
 
 function DocumentIcon() {
   return (
@@ -581,7 +639,9 @@ function SearchIcon() {
   );
 }
 
-export default function GestionPanel() {
+export default function GestionPanel({
+  section = "resumen",
+}: GestionPanelProps) {
   const [authenticated, setAuthenticated] = useState<boolean | null>(null);
 
   const [password, setPassword] = useState("");
@@ -1477,1001 +1537,1406 @@ export default function GestionPanel() {
           </div>
         </header>
 
-        <section className={styles.dashboardSection}>
-          <div className={styles.dashboardHeader}>
-            <div className={styles.dashboardIntroText}>
-              <span className={styles.dashboardEyebrow}>
-                Centro de control
-              </span>
+        <div className={styles.workspace}>
+          <aside className={styles.sidebar}>
+            <GestionNav />
+          </aside>
 
-              <h2>Todo listo para gestionar.</h2>
+          <div className={styles.mainContent}>
 
-              <p>
-                Consulta el estado de tus negocios y el rendimiento global de
-                TOCA desde un único lugar.
-              </p>
-            </div>
+            {section === "resumen" && (
+              <section className={styles.dashboardSection}>
+                <div className={styles.dashboardHeader}>
 
-            <button
-              type="button"
-              className={styles.dashboardCreateButton}
-              onClick={startCreating}
-            >
-              <PlusIcon />
-              <span>Nuevo negocio</span>
-            </button>
-          </div>
-
-          <div className={styles.dashboardStats}>
-            <article className={styles.dashboardStat}>
-              <div className={styles.dashboardStatIcon}>
-                <StoreIcon />
-              </div>
-
-              <div className={styles.dashboardStatContent}>
-                <span>Negocios activos</span>
-                <strong>{summary.active}</strong>
-
-                <p>
-                  {summary.active === 1
-                    ? "negocio disponible"
-                    : "negocios disponibles"}
-                </p>
-              </div>
-            </article>
-
-            <article className={styles.dashboardStat}>
-              <div
-                className={`${styles.dashboardStatIcon} ${styles.dashboardStatIconMuted}`}
-              >
-                <StoreIcon />
-              </div>
-
-              <div className={styles.dashboardStatContent}>
-                <span>Negocios inactivos</span>
-                <strong>{summary.inactive}</strong>
-
-                <p>
-                  {summary.inactive === 1
-                    ? "negocio desactivado"
-                    : "negocios desactivados"}
-                </p>
-              </div>
-            </article>
-
-            <article className={styles.dashboardStat}>
-              <div className={styles.dashboardStatIcon}>
-                <EyeIcon />
-              </div>
-
-              <div className={styles.dashboardStatContent}>
-                <span>Visitas totales</span>
-                <strong>{formatNumber(summary.visits)}</strong>
-                <p>Actividad registrada en las páginas</p>
-              </div>
-            </article>
-
-            <article
-              className={`${styles.dashboardStat} ${styles.dashboardStatAccent}`}
-            >
-              <div className={styles.dashboardStatIcon}>
-                <ChartIcon />
-              </div>
-
-              <div className={styles.dashboardStatContent}>
-                <span>Interacciones</span>
-                <strong>{formatNumber(summary.googleClicks)}</strong>
-                <p>Clics registrados hacia Google</p>
-              </div>
-            </article>
-          </div>
-
-          <div className={styles.activityCard}>
-            <div className={styles.activityHeader}>
-              <div className={styles.activityTitle}>
-                <div className={styles.activityIcon}>
-                  <ActivityIcon />
-                </div>
-
-                <div>
-                  <span>Actividad reciente</span>
-                  <h3>Últimos 14 días</h3>
-                </div>
-              </div>
-
-              <div className={styles.activityLegend}>
-                <span>
-                  <i className={styles.legendVisits} />
-                  Visitas
-                </span>
-
-                <span>
-                  <i className={styles.legendClicks} />
-                  Interacciones
-                </span>
-              </div>
-            </div>
-
-            {dailyActivity.length === 0 ? (
-              <div className={styles.activityEmpty}>
-                <ActivityIcon />
-                <p>Aún no hay actividad registrada.</p>
-                <span>
-                  Cuando tus páginas reciban visitas, aparecerán aquí.
-                </span>
-              </div>
-            ) : (
-              <div className={styles.activityList}>
-                {dailyActivity.map((activity) => {
-                  const visitsWidth =
-                    (activity.visits / maxActivity) * 100;
-
-                  const clicksWidth =
-                    (activity.googleClicks / maxActivity) * 100;
-
-                  return (
-                    <div className={styles.activityRow} key={activity.date}>
-                      <span className={styles.activityDate}>
-                        {formatActivityDate(activity.date)}
-                      </span>
-
-                      <div className={styles.activityBars}>
-                        <div className={styles.activityTrack}>
-                          <span
-                            className={`${styles.activityBar} ${styles.activityBarVisits}`}
-                            style={{
-                              width: `${activity.visits > 0
-                                  ? Math.max(visitsWidth, 3)
-                                  : 0
-                                }%`,
-                            }}
-                          />
-                        </div>
-
-                        <div className={styles.activityTrack}>
-                          <span
-                            className={`${styles.activityBar} ${styles.activityBarClicks}`}
-                            style={{
-                              width: `${activity.googleClicks > 0
-                                  ? Math.max(clicksWidth, 3)
-                                  : 0
-                                }%`,
-                            }}
-                          />
-                        </div>
+                  <div className={styles.dashboardIntroText}>
+                    <div className={styles.sectionHeadingMain}>
+                      <div className={styles.sectionIcon}>
+                        <DashboardIcon />
                       </div>
 
-                      <div className={styles.activityValues}>
-                        <strong>{formatNumber(activity.visits)}</strong>
-                        <span>{formatNumber(activity.googleClicks)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* GENERADOR DE INFORMES */}
-        <section className={styles.reportsSection}>
-          <div className={styles.sectionHeading}>
-            <div className={styles.sectionHeadingMain}>
-              <div className={styles.sectionIcon}>
-                <DocumentIcon />
-              </div>
-
-              <div>
-                <span className={styles.sectionLabel}>Informes</span>
-                <h2>Informes de actividad</h2>
-                <p>
-                  Genera los informes de todos tus negocios activos en un solo
-                  archivo.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.reportsCard}>
-            <div className={styles.reportsTop}>
-              <div className={styles.reportsIntro}>
-                <span className={styles.reportCardEyebrow}>
-                  Generador de informes
-                </span>
-
-                <h3>Periodo del informe</h3>
-                <p>¿Qué actividad quieres analizar?</p>
-              </div>
-
-              <div className={styles.reportBusinessCount}>
-                <strong>{summary.active}</strong>
-                <span>
-                  {summary.active === 1
-                    ? "negocio activo"
-                    : "negocios activos"}
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.reportPeriodButtons}>
-              <button
-                type="button"
-                className={
-                  reportPeriod === "last7"
-                    ? styles.reportPeriodButtonActive
-                    : styles.reportPeriodButton
-                }
-                onClick={() => handleReportPeriodChange("last7")}
-                disabled={generatingReports}
-              >
-                <span>Últimos 7 días</span>
-              </button>
-
-              <button
-                type="button"
-                className={
-                  reportPeriod === "last30"
-                    ? styles.reportPeriodButtonActive
-                    : styles.reportPeriodButton
-                }
-                onClick={() => handleReportPeriodChange("last30")}
-                disabled={generatingReports}
-              >
-                <span>Últimos 30 días</span>
-              </button>
-
-              <button
-                type="button"
-                className={
-                  reportPeriod === "thisMonth"
-                    ? styles.reportPeriodButtonActive
-                    : styles.reportPeriodButton
-                }
-                onClick={() => handleReportPeriodChange("thisMonth")}
-                disabled={generatingReports}
-              >
-                <span>Este mes</span>
-              </button>
-
-              <button
-                type="button"
-                className={
-                  reportPeriod === "previousMonth"
-                    ? styles.reportPeriodButtonActive
-                    : styles.reportPeriodButton
-                }
-                onClick={() => handleReportPeriodChange("previousMonth")}
-                disabled={generatingReports}
-              >
-                <span>Mes anterior</span>
-              </button>
-
-              <button
-                type="button"
-                className={
-                  reportPeriod === "custom"
-                    ? styles.reportPeriodButtonActive
-                    : styles.reportPeriodButton
-                }
-                onClick={() => handleReportPeriodChange("custom")}
-                disabled={generatingReports}
-              >
-                <span>Personalizado</span>
-              </button>
-            </div>
-
-            <div className={styles.reportDateArea}>
-              <div className={styles.reportDateField}>
-                <label htmlFor="reports-from">Desde</label>
-
-                <input
-                  id="reports-from"
-                  type="date"
-                  value={reportFrom}
-                  onChange={(event) => {
-                    setReportPeriod("custom");
-                    setReportFrom(event.target.value);
-                    setReportError("");
-                    setReportSuccess("");
-                  }}
-                  disabled={generatingReports}
-                />
-              </div>
-
-              <div className={styles.reportDateSeparator}>
-                <ArrowIcon />
-              </div>
-
-              <div className={styles.reportDateField}>
-                <label htmlFor="reports-to">Hasta</label>
-
-                <input
-                  id="reports-to"
-                  type="date"
-                  value={reportTo}
-                  onChange={(event) => {
-                    setReportPeriod("custom");
-                    setReportTo(event.target.value);
-                    setReportError("");
-                    setReportSuccess("");
-                  }}
-                  disabled={generatingReports}
-                />
-              </div>
-
-              <button
-                type="button"
-                className={styles.reportGenerateButton}
-                onClick={handleGenerateReports}
-                disabled={
-                  generatingReports ||
-                  !reportFrom ||
-                  !reportTo ||
-                  summary.active === 0
-                }
-              >
-                {generatingReports ? (
-                  <>
-                    <span className={styles.spinner} />
-                    <span>Generando...</span>
-                  </>
-                ) : (
-                  <>
-                    <AddDocumentIcon />
-                    <span>Generar informes</span>
-                    <ArrowIcon />
-                  </>
-                )}
-              </button>
-            </div>
-
-            <div className={styles.reportOutput}>
-              <div className={styles.reportOutputIcon}>
-                <DocumentIcon />
-              </div>
-
-              <div className={styles.reportOutputText}>
-                <strong>Se generará un informe por negocio</strong>
-
-                <span>
-                  {summary.active === 0
-                    ? "Crea o reactiva un negocio para comenzar."
-                    : `${summary.active
-                    } negocio${summary.active === 1 ? "" : "s"} activo${summary.active === 1 ? "" : "s"
-                    } · un PDF individual por cada uno · un único ZIP para descargar.`}
-                </span>
-              </div>
-
-              <div className={styles.reportOutputBadge}>ZIP</div>
-            </div>
-
-            {reportError && (
-              <div className={styles.formError}>
-                <AlertIcon />
-                <span>{reportError}</span>
-              </div>
-            )}
-
-            {reportSuccess && (
-              <div className={styles.formSuccess}>
-                <span className={styles.successCheck}>✓</span>
-                <span>{reportSuccess}</span>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* HISTORIAL DE INFORMES */}
-        <section className={styles.reportsSection}>
-          <div className={styles.sectionHeading}>
-            <div className={styles.sectionHeadingMain}>
-              <div className={styles.sectionIcon}>
-                <HistoryIcon />
-              </div>
-
-              <div>
-                <span className={styles.sectionLabel}>Archivo</span>
-                <h2>Historial de informes</h2>
-                <p>
-                  Consulta los informes anteriores y descarga de nuevo los ZIP
-                  que ya hayas generado.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={loadReportHistory}
-              disabled={reportHistoryLoading}
-            >
-              <RefreshIcon />
-              <span>
-                {reportHistoryLoading ? "Actualizando..." : "Actualizar"}
-              </span>
-            </button>
-          </div>
-
-          <div className={styles.reportsCard}>
-            {reportHistoryError && (
-              <div className={styles.formError}>
-                <AlertIcon />
-                <span>{reportHistoryError}</span>
-              </div>
-            )}
-
-            {reportHistoryLoading && reportHistory.length === 0 ? (
-              <div className={styles.activityEmpty}>
-                <span className={styles.spinner} />
-                <p>Cargando historial...</p>
-              </div>
-            ) : reportHistory.length === 0 ? (
-              <div className={styles.activityEmpty}>
-                <SearchDocumentIcon />
-                <p>Aún no hay informes guardados.</p>
-                <span>
-                  Cuando generes un informe, aparecerá aquí si se ha guardado
-                  correctamente.
-                </span>
-              </div>
-            ) : (
-              <div>
-                {reportHistory.map((report) => {
-                  const completed = report.status === "completed";
-
-                  const reportTypeLabel =
-                    report.reportType === "collective"
-                      ? "Informe colectivo"
-                      : "Informe individual";
-
-                  return (
-                    <div className={styles.reportOutput} key={report.id}>
-                      <div className={styles.reportOutputIcon}>
-                        <DocumentIcon />
-                      </div>
-
-                      <div className={styles.reportOutputText}>
-                        <strong>
-                          {report.fileName || reportTypeLabel}
-                        </strong>
-
-                        <span>{reportTypeLabel}</span>
-
-                        <span>
-                          Periodo: {formatDate(report.periodFrom)} –{" "}
-                          {formatDate(report.periodTo)}
+                      <div>
+                        <span className={styles.dashboardEyebrow}>
+                          Centro de control
                         </span>
 
-                        <span>
-                          Generado: {formatDate(report.createdAt)} ·{" "}
-                          {formatNumber(report.businessCount)}{" "}
-                          {report.businessCount === 1 ? "negocio" : "negocios"}{" "}
-                          · {formatFileSize(report.fileSize)}
-                        </span>
-
-                        {!completed && (
-                          <span>
-                            {report.errorMessage ||
-                              "La generación no se completó correctamente."}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={styles.reportOutputBadge}>
-                        {completed ? "ZIP" : "ERROR"}
-                      </div>
-
-                      <button
-                        type="button"
-                        className={styles.reportGenerateButton}
-                        onClick={() => handleDownloadReport(report)}
-                        disabled={
-                          !completed ||
-                          !report.fileName ||
-                          downloadingReportId !== null
-                        }
-                      >
-                        {downloadingReportId === report.id ? (
-                          "Descargando..."
-                        ) : (
-                          <>
-                            <DownloadIcon />
-                            <span>Descargar</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* DIRECTORIO DE NEGOCIOS */}
-        <section className={styles.businessSection}>
-          <div className={styles.sectionHeading}>
-            <div className={styles.sectionHeadingMain}>
-              <div className={styles.sectionIcon}>
-                <StoreIcon />
-              </div>
-
-              <div>
-                <span className={styles.sectionLabel}>Directorio</span>
-
-                <h2>Mis negocios</h2>
-
-                <p>
-                  {summary.total} negocio{summary.total === 1 ? "" : "s"}{" "}
-                  registrado{summary.total === 1 ? "" : "s"} en TOCA.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={startCreating}
-            >
-              <PlusIcon />
-              <span>Nuevo negocio</span>
-            </button>
-          </div>
-
-          {success && (
-            <div className={styles.formSuccess}>
-              <span className={styles.successCheck}>✓</span>
-              <span>{success}</span>
-            </div>
-          )}
-
-          {error && !formOpen && (
-            <div className={styles.formError}>
-              <AlertIcon />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <div className={styles.businessTools}>
-            <div className={styles.searchBox}>
-              <SearchIcon />
-
-              <input
-                type="search"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                placeholder="Buscar por nombre o slug..."
-                aria-label="Buscar negocio"
-              />
-            </div>
-
-            <div className={styles.filterGroup}>
-              <div className={styles.filterLabel}>
-                <FilterIcon />
-                <span>Mostrar</span>
-              </div>
-
-              <div className={styles.filterButtons}>
-                <button
-                  type="button"
-                  className={
-                    statusFilter === "all"
-                      ? styles.filterButtonActive
-                      : styles.filterButton
-                  }
-                  onClick={() => setStatusFilter("all")}
-                >
-                  Todos
-                  <span>{summary.total}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    statusFilter === "active"
-                      ? styles.filterButtonActive
-                      : styles.filterButton
-                  }
-                  onClick={() => setStatusFilter("active")}
-                >
-                  Activos
-                  <span>{summary.active}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    statusFilter === "inactive"
-                      ? styles.filterButtonActive
-                      : styles.filterButton
-                  }
-                  onClick={() => setStatusFilter("inactive")}
-                >
-                  Inactivos
-                  <span>{summary.inactive}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {businesses.length === 0 ? (
-            <div className={styles.empty}>
-              <div className={styles.emptyIcon}>
-                <StoreIcon />
-              </div>
-
-              <h3>No hay negocios registrados</h3>
-
-              <p>
-                Crea el primer negocio para comenzar a utilizar TOCA.
-              </p>
-
-              <button
-                type="button"
-                className={styles.primaryButton}
-                onClick={startCreating}
-              >
-                <PlusIcon />
-                Crear negocio
-              </button>
-            </div>
-          ) : filteredBusinesses.length === 0 ? (
-            <div className={styles.empty}>
-              <div className={styles.emptyIcon}>
-                <SearchIcon />
-              </div>
-
-              <h3>No hay resultados</h3>
-
-              <p>
-                No hay negocios que coincidan con la búsqueda o el filtro
-                seleccionado.
-              </p>
-
-              <button
-                type="button"
-                className={styles.secondaryAction}
-                onClick={() => {
-                  setSearchTerm("");
-                  setStatusFilter("all");
-                }}
-              >
-                Limpiar filtros
-              </button>
-            </div>
-          ) : (
-            <div className={styles.businessList}>
-              {filteredBusinesses.map((business) => {
-                const stats = statsByBusiness[business.id] || {
-                  visits: 0,
-                  googleClicks: 0,
-                  lastActivity: null,
-                };
-
-                return (
-                  <article
-                    className={`${styles.business} ${!business.active ? styles.businessInactive : ""
-                      }`}
-                    key={business.id}
-                  >
-                    <div className={styles.businessMain}>
-                      <div className={styles.businessIdentity}>
-                        <div className={styles.businessAvatar}>
-                          {business.logoUrl ? (
-                            <Image
-                              src={business.logoUrl}
-                              alt=""
-                              width={48}
-                              height={48}
-                            />
-                          ) : (
-                            <StoreIcon />
-                          )}
-                        </div>
-
-                        <div className={styles.businessInfo}>
-                          <span
-                            className={`${styles.businessStatus} ${!business.active
-                                ? styles.businessStatusInactive
-                                : ""
-                              }`}
-                          >
-                            {business.active
-                              ? "Negocio activo"
-                              : "Negocio inactivo"}
-                          </span>
-
-                          <h3>{business.name}</h3>
-
-                          <span className={styles.businessSlug}>
-                            /{business.slug}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className={styles.businessMeta}>
-                        <div>
-                          <span>Visitas</span>
-                          <strong>{formatNumber(stats.visits)}</strong>
-                        </div>
-
-                        <div>
-                          <span>Interacciones</span>
-                          <strong>{formatNumber(stats.googleClicks)}</strong>
-                        </div>
-
-                        <div>
-                          <span>Última actividad</span>
-                          <strong>{formatDate(stats.lastActivity)}</strong>
-                        </div>
-
-                        <div>
-                          <span>Creado</span>
-                          <strong>
-                            {formatCreatedDate(business.createdAt)}
-                          </strong>
-                        </div>
+                        <h2>Todo listo para gestionar.</h2>
                       </div>
                     </div>
 
-                    <div className={styles.businessActions}>
-                      {business.active && (
-                        <a
-                          href={`/${business.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${styles.actionButton} ${styles.actionPrimary}`}
-                        >
-                          <ExternalIcon />
-                          <span>Ver página</span>
-                        </a>
-                      )}
-
-                      <a
-                        href={`/estadisticas/${business.slug}`}
-                        className={styles.actionButton}
-                      >
-                        <ChartIcon />
-                        <span>Estadísticas</span>
-                      </a>
-
-                      {business.active && (
-                        <button
-                          type="button"
-                          className={styles.actionButton}
-                          onClick={() => startEditing(business)}
-                        >
-                          <EditIcon />
-                          <span>Editar</span>
-                        </button>
-                      )}
-
-                      {business.active ? (
-                        <button
-                          type="button"
-                          className={`${styles.actionButton} ${styles.actionDanger}`}
-                          onClick={() =>
-                            deactivateBusiness(business.id, business.name)
-                          }
-                          disabled={
-                            quickDeletingId === business.id ||
-                            activatingId !== null
-                          }
-                        >
-                          <TrashIcon />
-                          <span>
-                            {quickDeletingId === business.id
-                              ? "Desactivando..."
-                              : "Desactivar"}
-                          </span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className={`${styles.actionButton} ${styles.actionReactivate}`}
-                          onClick={() =>
-                            activateBusiness(business.id, business.name)
-                          }
-                          disabled={
-                            activatingId === business.id ||
-                            quickDeletingId !== null ||
-                            deleting
-                          }
-                        >
-                          <ActivateIcon />
-                          <span>
-                            {activatingId === business.id
-                              ? "Reactivando..."
-                              : "Reactivar"}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        {/* FORMULARIO DE NEGOCIO */}
-        {formOpen && (
-          <section className={styles.formSection}>
-            <div className={styles.sectionHeading}>
-              <div className={styles.sectionHeadingMain}>
-                <div className={styles.sectionIcon}>
-                  {editingId ? <EditIcon /> : <PlusIcon />}
-                </div>
-
-                <div>
-                  <span className={styles.sectionLabel}>
-                    {editingId ? "Configuración" : "Nuevo registro"}
-                  </span>
-
-                  <h2>
-                    {editingId ? "Editar negocio" : "Añadir negocio"}
-                  </h2>
-
-                  <p>
-                    {editingId
-                      ? "Modifica los datos asociados a este negocio."
-                      : "Crea una nueva página para un negocio de TOCA."}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={closeForm}
-                disabled={saving || deleting}
-              >
-                Cancelar
-              </button>
-            </div>
-
-            <form className={styles.form} onSubmit={handleSubmit}>
-              <div className={styles.formGrid}>
-                <div className={styles.field}>
-                  <label htmlFor="business-name">Nombre del negocio</label>
-
-                  <input
-                    id="business-name"
-                    type="text"
-                    value={form.name}
-                    onChange={(event) =>
-                      handleNameChange(event.target.value)
-                    }
-                    placeholder="Ej. Bar Pepe"
-                    required
-                  />
-                </div>
-
-                <div className={styles.field}>
-                  <label htmlFor="business-slug">Slug</label>
-
-                  <input
-                    id="business-slug"
-                    type="text"
-                    value={form.slug}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        slug: createSlug(event.target.value),
-                      }))
-                    }
-                    placeholder="bar-pepe"
-                    required
-                  />
-
-                  <span className={styles.help}>
-                    URL pública: <strong>/{form.slug || "..."}</strong>
-                  </span>
-                </div>
-
-                <div className={styles.fieldFull}>
-                  <label htmlFor="google-review-url">
-                    URL de reseñas de Google
-                  </label>
-
-                  <input
-                    id="google-review-url"
-                    type="url"
-                    value={form.googleReviewUrl}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        googleReviewUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://g.page/r/..."
-                    required
-                  />
-
-                  <span className={styles.help}>
-                    Enlace al formulario de reseña del negocio en Google.
-                  </span>
-                </div>
-
-                <div className={styles.fieldFull}>
-                  <label htmlFor="logo-url">
-                    URL del logo
-                    <span className={styles.optional}> · opcional</span>
-                  </label>
-
-                  <input
-                    id="logo-url"
-                    type="url"
-                    value={form.logoUrl}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        logoUrl: event.target.value,
-                      }))
-                    }
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
-
-              {error && (
-                <div className={styles.formError}>
-                  <AlertIcon />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {editingId && (
-                <div className={styles.dangerZone}>
-                  <div className={styles.dangerText}>
-                    <strong>Zona de peligro</strong>
-
-                    <span>
-                      Desactiva este negocio y retira su página pública. Sus
-                      estadísticas se conservarán.
-                    </span>
+                    <p>
+                      Consulta el estado de tus negocios y el rendimiento global de
+                      TOCA desde un único lugar.
+                    </p>
                   </div>
 
                   <button
                     type="button"
-                    onClick={handleDelete}
-                    disabled={saving || deleting}
-                    className={styles.deleteButton}
+                    className={styles.dashboardCreateButton}
+                    onClick={startCreating}
                   >
-                    <TrashIcon />
-                    {deleting ? "Desactivando..." : "Desactivar negocio"}
+                    <PlusIcon />
+                    <span>Nuevo negocio</span>
                   </button>
                 </div>
-              )}
 
-              <div className={styles.formActions}>
-                <button
-                  type="button"
-                  className={styles.cancelFormButton}
-                  onClick={closeForm}
-                  disabled={saving || deleting}
-                >
-                  Cancelar
-                </button>
+                <div className={styles.dashboardStats}>
+                  <article className={styles.dashboardStat}>
+                    <div className={styles.dashboardStatIcon}>
+                      <StoreIcon />
+                    </div>
 
-                <button
-                  type="submit"
-                  className={styles.primaryButton}
-                  disabled={saving || deleting}
-                >
-                  {saving
-                    ? "Guardando..."
-                    : editingId
-                      ? "Guardar cambios"
-                      : "Crear negocio"}
+                    <div className={styles.dashboardStatContent}>
+                      <span>Negocios activos</span>
+                      <strong>{summary.active}</strong>
 
-                  {!saving && !deleting && <ArrowIcon />}
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
+                      <p>
+                        {summary.active === 1
+                          ? "negocio disponible"
+                          : "negocios disponibles"}
+                      </p>
+                    </div>
+                  </article>
 
+                  <article className={styles.dashboardStat}>
+                    <div
+                      className={`${styles.dashboardStatIcon} ${styles.dashboardStatIconMuted}`}
+                    >
+                      <StoreIcon />
+                    </div>
+
+                    <div className={styles.dashboardStatContent}>
+                      <span>Negocios inactivos</span>
+                      <strong>{summary.inactive}</strong>
+
+                      <p>
+                        {summary.inactive === 1
+                          ? "negocio desactivado"
+                          : "negocios desactivados"}
+                      </p>
+                    </div>
+                  </article>
+
+                  <article className={styles.dashboardStat}>
+                    <div className={styles.dashboardStatIcon}>
+                      <EyeIcon />
+                    </div>
+
+                    <div className={styles.dashboardStatContent}>
+                      <span>Visitas totales</span>
+                      <strong>{formatNumber(summary.visits)}</strong>
+                      <p>Actividad registrada en las páginas</p>
+                    </div>
+                  </article>
+
+                  <article
+                    className={`${styles.dashboardStat} ${styles.dashboardStatAccent}`}
+                  >
+                    <div className={styles.dashboardStatIcon}>
+                      <ChartIcon />
+                    </div>
+
+                    <div className={styles.dashboardStatContent}>
+                      <span>Interacciones</span>
+                      <strong>{formatNumber(summary.googleClicks)}</strong>
+                      <p>Clics registrados hacia Google</p>
+                    </div>
+                  </article>
+                </div>
+
+                <div className={styles.activityCard}>
+                  <div className={styles.activityHeader}>
+                    <div className={styles.activityTitle}>
+                      <div className={styles.activityIcon}>
+                        <ActivityIcon />
+                      </div>
+
+                      <div>
+                        <span>Actividad reciente</span>
+                        <h3>Últimos 14 días</h3>
+                      </div>
+                    </div>
+
+                    <div className={styles.activityLegend}>
+                      <span>
+                        <i className={styles.legendVisits} />
+                        Visitas
+                      </span>
+
+                      <span>
+                        <i className={styles.legendClicks} />
+                        Interacciones
+                      </span>
+                    </div>
+                  </div>
+
+                  {dailyActivity.length === 0 ? (
+                    <div className={styles.activityEmpty}>
+                      <ActivityIcon />
+                      <p>Aún no hay actividad registrada.</p>
+                      <span>
+                        Cuando tus páginas reciban visitas, aparecerán aquí.
+                      </span>
+                    </div>
+                  ) : (
+                    <div className={styles.activityList}>
+                      {dailyActivity.map((activity) => {
+                        const visitsWidth =
+                          (activity.visits / maxActivity) * 100;
+
+                        const clicksWidth =
+                          (activity.googleClicks / maxActivity) * 100;
+
+                        return (
+                          <div className={styles.activityRow} key={activity.date}>
+                            <span className={styles.activityDate}>
+                              {formatActivityDate(activity.date)}
+                            </span>
+
+                            <div className={styles.activityBars}>
+                              <div className={styles.activityTrack}>
+                                <span
+                                  className={`${styles.activityBar} ${styles.activityBarVisits}`}
+                                  style={{
+                                    width: `${activity.visits > 0
+                                      ? Math.max(visitsWidth, 3)
+                                      : 0
+                                      }%`,
+                                  }}
+                                />
+                              </div>
+
+                              <div className={styles.activityTrack}>
+                                <span
+                                  className={`${styles.activityBar} ${styles.activityBarClicks}`}
+                                  style={{
+                                    width: `${activity.googleClicks > 0
+                                      ? Math.max(clicksWidth, 3)
+                                      : 0
+                                      }%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+
+                            <div className={styles.activityValues}>
+                              <strong>{formatNumber(activity.visits)}</strong>
+                              <span>{formatNumber(activity.googleClicks)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+
+
+
+            {/* ESTADÍSTICAS */}
+            {section === "estadisticas" && (
+              <section className={styles.dashboardSection}>
+                <div className={styles.dashboardHeader}>
+
+                  <div className={styles.dashboardIntroText}>
+                    <div className={styles.sectionHeadingMain}>
+                      <div className={styles.sectionIcon}>
+                        <StatisticsIcon />
+                      </div>
+
+                      <div>
+                        <span className={styles.dashboardEyebrow}>
+                          Análisis de rendimiento
+                        </span>
+
+                        <h2>Estadísticas</h2>
+                      </div>
+                    </div>
+
+                    <p>
+                      Analiza la evolución de la actividad y descubre qué negocios
+                      concentran más visitas e interacciones.
+                    </p>
+                  </div>
+
+                </div>
+
+                {(() => {
+                  const rankedBusinesses = [...businesses]
+                    .map((business) => {
+                      const stats = statsByBusiness[business.id] ?? {
+                        visits: 0,
+                        googleClicks: 0,
+                        lastActivity: null,
+                      };
+
+                      return {
+                        business,
+                        stats,
+                        interactionRate:
+                          stats.visits > 0
+                            ? (stats.googleClicks / stats.visits) * 100
+                            : null,
+                      };
+                    })
+                    .sort((a, b) => b.stats.visits - a.stats.visits);
+
+                  const totalVisits = dailyActivity.reduce(
+                    (total, activity) => total + activity.visits,
+                    0
+                  );
+
+                  const totalClicks = dailyActivity.reduce(
+                    (total, activity) => total + activity.googleClicks,
+                    0
+                  );
+
+                  const peakDay = dailyActivity.reduce<
+                    (typeof dailyActivity)[number] | null
+                  >((best, activity) => {
+                    const activityTotal = activity.visits + activity.googleClicks;
+                    const bestTotal = best
+                      ? best.visits + best.googleClicks
+                      : -1;
+
+                    return activityTotal > bestTotal ? activity : best;
+                  }, null);
+
+                  const topBusiness = rankedBusinesses.find(
+                    (item) => item.stats.visits > 0
+                  );
+
+                  const topInteraction = [...rankedBusinesses]
+                    .filter((item) => item.interactionRate !== null)
+                    .sort(
+                      (a, b) =>
+                        (b.interactionRate ?? 0) - (a.interactionRate ?? 0)
+                    )[0];
+
+                  const chartMax = Math.max(
+                    1,
+                    ...dailyActivity.map((activity) =>
+                      Math.max(activity.visits, activity.googleClicks)
+                    )
+                  );
+
+                  const hasActivity = dailyActivity.some(
+                    (activity) => activity.visits > 0 || activity.googleClicks > 0
+                  );
+
+                  return (
+                    <>
+                      {/* INDICADORES PRINCIPALES */}
+                      <div className={styles.statsOverview}>
+                        <article className={styles.statsMetric}>
+                          <span className={styles.statsMetricLabel}>
+                            Visitas registradas
+                          </span>
+                          <strong className={styles.statsMetricValue}>
+                            {formatNumber(totalVisits)}
+                          </strong>
+                          <span className={styles.statsMetricHint}>
+                            Periodo mostrado en el gráfico
+                          </span>
+                        </article>
+
+                        <article className={styles.statsMetric}>
+                          <span className={styles.statsMetricLabel}>
+                            Clics hacia Google
+                          </span>
+                          <strong className={styles.statsMetricValue}>
+                            {formatNumber(totalClicks)}
+                          </strong>
+                          <span className={styles.statsMetricHint}>
+                            Interacciones registradas en el periodo
+                          </span>
+                        </article>
+
+                        <article className={styles.statsMetric}>
+                          <span className={styles.statsMetricLabel}>
+                            Negocios registrados
+                          </span>
+                          <strong className={styles.statsMetricValue}>
+                            {formatNumber(businesses.length)}
+                          </strong>
+                          <span className={styles.statsMetricHint}>
+                            {businesses.filter((business) => business.active).length} activos
+                          </span>
+                        </article>
+                      </div>
+
+                      {/* EVOLUCIÓN DE LA ACTIVIDAD */}
+                      <div className={`${styles.activityCard} ${styles.statsChartCard}`}>
+                        <div className={styles.activityHeader}>
+                          <div className={styles.activityTitle}>
+                            <div className={styles.activityIcon}>
+                              <ActivityIcon />
+                            </div>
+                            <div>
+                              <span>Tendencia general</span>
+                              <h3>Actividad diaria</h3>
+                            </div>
+                          </div>
+
+                          <div className={styles.activityLegend}>
+                            <span>
+                              <i className={styles.legendVisits} />
+                              Visitas
+                            </span>
+                            <span>
+                              <i className={styles.legendClicks} />
+                              Clics a Google
+                            </span>
+                          </div>
+                        </div>
+
+                        {!hasActivity ? (
+                          <div className={styles.activityEmpty}>
+                            <ActivityIcon />
+                            <p>Aún no hay actividad registrada.</p>
+                            <span>
+                              Cuando se registren visitas o clics, podrás consultar aquí
+                              su evolución.
+                            </span>
+                          </div>
+                        ) : (
+                          <div
+                            className={styles.statsChart}
+                            role="img"
+                            aria-label="Gráfico de barras que compara las visitas y los clics a Google de los últimos 14 días"
+                          >
+                            {dailyActivity.map((activity) => {
+                              const visitsHeight =
+                                activity.visits > 0
+                                  ? Math.max((activity.visits / chartMax) * 100, 3)
+                                  : 0;
+
+                              const clicksHeight =
+                                activity.googleClicks > 0
+                                  ? Math.max((activity.googleClicks / chartMax) * 100, 3)
+                                  : 0;
+
+                              return (
+                                <div className={styles.statsChartColumn} key={activity.date}>
+                                  <div className={styles.statsChartBars}>
+                                    <div className={styles.statsChartBarSlot}>
+                                      <span
+                                        className={`${styles.statsChartBar} ${styles.statsChartBarVisits}`}
+                                        style={{ height: `${visitsHeight}%` }}
+                                        title={`Visitas: ${formatNumber(activity.visits)}`}
+                                      />
+                                    </div>
+                                    <div className={styles.statsChartBarSlot}>
+                                      <span
+                                        className={`${styles.statsChartBar} ${styles.statsChartBarClicks}`}
+                                        style={{ height: `${clicksHeight}%` }}
+                                        title={`Clics a Google: ${formatNumber(activity.googleClicks)}`}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <span className={styles.statsChartDate}>
+                                    {formatActivityDate(activity.date)}
+                                  </span>
+                                  <span className={styles.statsChartValues}>
+                                    {formatNumber(activity.visits)} /{" "}
+                                    {formatNumber(activity.googleClicks)}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+
+                      </div>
+
+                      {/* INSIGHTS */}
+                      <div className={styles.statsInsights}>
+                        <div className={styles.statsSectionHeading}>
+                          <div>
+                            <span className={styles.dashboardEyebrow}>
+                              Lectura rápida
+                            </span>
+                            <h3>Lo más destacado</h3>
+                          </div>
+                        </div>
+
+                        <div className={styles.statsInsightGrid}>
+                          <article className={styles.statsInsight}>
+                            <span className={styles.statsInsightLabel}>
+                              Más visitas
+                            </span>
+                            {topBusiness ? (
+                              <>
+                                <strong>{topBusiness.business.name}</strong>
+                                <span>
+                                  {formatNumber(topBusiness.stats.visits)} visitas
+                                </span>
+                              </>
+                            ) : (
+                              <span>Aún no hay visitas por negocio.</span>
+                            )}
+                          </article>
+
+                          <article className={styles.statsInsight}>
+                            <span className={styles.statsInsightLabel}>
+                              Mayor ratio de interacción
+                            </span>
+                            {topInteraction ? (
+                              <>
+                                <strong>{topInteraction.business.name}</strong>
+                                <span>
+                                  {topInteraction.interactionRate!.toLocaleString(
+                                    "es-ES",
+                                    { maximumFractionDigits: 1 }
+                                  )}% de clics respecto a visitas
+                                </span>
+                              </>
+                            ) : (
+                              <span>No hay datos suficientes para calcularlo.</span>
+                            )}
+                          </article>
+
+                          <article className={styles.statsInsight}>
+                            <span className={styles.statsInsightLabel}>
+                              Día con más actividad
+                            </span>
+                            {peakDay &&
+                              peakDay.visits + peakDay.googleClicks > 0 ? (
+                              <>
+                                <strong>{formatActivityDate(peakDay.date)}</strong>
+                                <span>
+                                  {formatNumber(
+                                    peakDay.visits + peakDay.googleClicks
+                                  )}{" "}
+                                  acciones registradas
+                                </span>
+                              </>
+                            ) : (
+                              <span>Aún no hay actividad registrada.</span>
+                            )}
+                          </article>
+                        </div>
+                      </div>
+
+                      {/* RANKING DE NEGOCIOS */}
+                      <div className={`${styles.activityCard} ${styles.statsRankingCard}`}>
+                        <div className={styles.activityHeader}>
+                          <div className={styles.activityTitle}>
+                            <div className={styles.activityIcon}>
+                              <ChartIcon />
+                            </div>
+                            <div>
+                              <span>Comparativa de resultados</span>
+                              <h3>Rendimiento por negocio</h3>
+                            </div>
+                          </div>
+                        </div>
+
+                        {rankedBusinesses.length === 0 ? (
+                          <div className={styles.activityEmpty}>
+                            <StoreIcon />
+                            <p>No hay negocios para comparar.</p>
+                            <span>
+                              Cuando registres negocios, podrás consultar aquí sus
+                              resultados.
+                            </span>
+                          </div>
+                        ) : (
+                          <div className={styles.statsTableWrapper}>
+                            <table className={styles.statsTable}>
+                              <thead>
+                                <tr>
+                                  <th scope="col">Negocio</th>
+                                  <th scope="col">Estado</th>
+                                  <th scope="col">Visitas</th>
+                                  <th scope="col">Clics Google</th>
+                                  <th scope="col">Ratio</th>
+                                  <th scope="col">Última actividad</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {rankedBusinesses.map(
+                                  ({ business, stats, interactionRate }, index) => (
+                                    <tr key={business.id}>
+                                      <td>
+                                        <div className={styles.statsBusinessCell}>
+                                          <span className={styles.statsRank}>
+                                            {index + 1}
+                                          </span>
+                                          <div>
+                                            <strong>{business.name}</strong>
+                                            <span>/{business.slug}</span>
+                                          </div>
+                                        </div>
+                                      </td>
+                                      <td>
+                                        <span
+                                          className={`${styles.businessStatus} ${!business.active
+                                            ? styles.businessStatusInactive
+                                            : ""
+                                            }`}
+                                        >
+                                          {business.active ? "Activo" : "Inactivo"}
+                                        </span>
+                                      </td>
+                                      <td className={styles.statsNumericCell}>
+                                        {formatNumber(stats.visits)}
+                                      </td>
+                                      <td className={styles.statsNumericCell}>
+                                        {formatNumber(stats.googleClicks)}
+                                      </td>
+                                      <td className={styles.statsNumericCell}>
+                                        {interactionRate !== null
+                                          ? `${interactionRate.toLocaleString("es-ES", {
+                                            maximumFractionDigits: 1,
+                                          })}%`
+                                          : "—"}
+                                      </td>
+                                      <td>{formatDate(stats.lastActivity)}</td>
+                                    </tr>
+                                  )
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </section>
+            )}
+
+
+            {/* GENERADOR DE INFORMES */}
+            {section === "informes" && (
+              <section className={styles.reportsSection}>
+                <div className={styles.sectionHeading}>
+                  <div className={styles.sectionHeadingMain}>
+                    <div className={styles.sectionIcon}>
+                      <DocumentIcon />
+                    </div>
+
+                    <div>
+                      <span className={styles.sectionLabel}>Informes</span>
+                      <h2>Informes de actividad</h2>
+                      <p>
+                        Genera los informes de todos tus negocios activos en un solo
+                        archivo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.reportsCard}>
+                  <div className={styles.reportsTop}>
+                    <div className={styles.reportsIntro}>
+                      <span className={styles.reportCardEyebrow}>
+                        Generador de informes
+                      </span>
+
+                      <h3>Periodo del informe</h3>
+                      <p>¿Qué actividad quieres analizar?</p>
+                    </div>
+
+                    <div className={styles.reportBusinessCount}>
+                      <strong>{summary.active}</strong>
+                      <span>
+                        {summary.active === 1
+                          ? "negocio activo"
+                          : "negocios activos"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.reportPeriodButtons}>
+                    <button
+                      type="button"
+                      className={
+                        reportPeriod === "last7"
+                          ? styles.reportPeriodButtonActive
+                          : styles.reportPeriodButton
+                      }
+                      onClick={() => handleReportPeriodChange("last7")}
+                      disabled={generatingReports}
+                    >
+                      <span>Últimos 7 días</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        reportPeriod === "last30"
+                          ? styles.reportPeriodButtonActive
+                          : styles.reportPeriodButton
+                      }
+                      onClick={() => handleReportPeriodChange("last30")}
+                      disabled={generatingReports}
+                    >
+                      <span>Últimos 30 días</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        reportPeriod === "thisMonth"
+                          ? styles.reportPeriodButtonActive
+                          : styles.reportPeriodButton
+                      }
+                      onClick={() => handleReportPeriodChange("thisMonth")}
+                      disabled={generatingReports}
+                    >
+                      <span>Este mes</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        reportPeriod === "previousMonth"
+                          ? styles.reportPeriodButtonActive
+                          : styles.reportPeriodButton
+                      }
+                      onClick={() => handleReportPeriodChange("previousMonth")}
+                      disabled={generatingReports}
+                    >
+                      <span>Mes anterior</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={
+                        reportPeriod === "custom"
+                          ? styles.reportPeriodButtonActive
+                          : styles.reportPeriodButton
+                      }
+                      onClick={() => handleReportPeriodChange("custom")}
+                      disabled={generatingReports}
+                    >
+                      <span>Personalizado</span>
+                    </button>
+                  </div>
+
+                  <div className={styles.reportDateArea}>
+                    <div className={styles.reportDateField}>
+                      <label htmlFor="reports-from">Desde</label>
+
+                      <input
+                        id="reports-from"
+                        type="date"
+                        value={reportFrom}
+                        onChange={(event) => {
+                          setReportPeriod("custom");
+                          setReportFrom(event.target.value);
+                          setReportError("");
+                          setReportSuccess("");
+                        }}
+                        disabled={generatingReports}
+                      />
+                    </div>
+
+                    <div className={styles.reportDateSeparator}>
+                      <ArrowIcon />
+                    </div>
+
+                    <div className={styles.reportDateField}>
+                      <label htmlFor="reports-to">Hasta</label>
+
+                      <input
+                        id="reports-to"
+                        type="date"
+                        value={reportTo}
+                        onChange={(event) => {
+                          setReportPeriod("custom");
+                          setReportTo(event.target.value);
+                          setReportError("");
+                          setReportSuccess("");
+                        }}
+                        disabled={generatingReports}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.reportGenerateButton}
+                      onClick={handleGenerateReports}
+                      disabled={
+                        generatingReports ||
+                        !reportFrom ||
+                        !reportTo ||
+                        summary.active === 0
+                      }
+                    >
+                      {generatingReports ? (
+                        <>
+                          <span className={styles.spinner} />
+                          <span>Generando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <AddDocumentIcon />
+                          <span>Generar informes</span>
+                          <ArrowIcon />
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className={styles.reportOutput}>
+                    <div className={styles.reportOutputIcon}>
+                      <DocumentIcon />
+                    </div>
+
+                    <div className={styles.reportOutputText}>
+                      <strong>Se generará un informe por negocio</strong>
+
+                      <span>
+                        {summary.active === 0
+                          ? "Crea o reactiva un negocio para comenzar."
+                          : `${summary.active
+                          } negocio${summary.active === 1 ? "" : "s"} activo${summary.active === 1 ? "" : "s"
+                          } · un PDF individual por cada uno · un único ZIP para descargar.`}
+                      </span>
+                    </div>
+
+                    <div className={styles.reportOutputBadge}>ZIP</div>
+                  </div>
+
+                  {reportError && (
+                    <div className={styles.formError}>
+                      <AlertIcon />
+                      <span>{reportError}</span>
+                    </div>
+                  )}
+
+                  {reportSuccess && (
+                    <div className={styles.formSuccess}>
+                      <span className={styles.successCheck}>✓</span>
+                      <span>{reportSuccess}</span>
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* HISTORIAL DE INFORMES */}
+            {section === "archivo" && (
+              <section className={styles.reportsSection}>
+                <div className={styles.sectionHeading}>
+                  <div className={styles.sectionHeadingMain}>
+                    <div className={styles.sectionIcon}>
+                      <HistoryIcon />
+                    </div>
+
+                    <div>
+                      <span className={styles.sectionLabel}>Archivo</span>
+                      <h2>Historial de informes</h2>
+                      <p>
+                        Consulta los informes anteriores y descarga de nuevo los ZIP
+                        que ya hayas generado.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.secondaryAction}
+                    onClick={loadReportHistory}
+                    disabled={reportHistoryLoading}
+                  >
+                    <RefreshIcon />
+                    <span>
+                      {reportHistoryLoading ? "Actualizando..." : "Actualizar"}
+                    </span>
+                  </button>
+                </div>
+
+                <div className={styles.reportsCard}>
+                  {reportHistoryError && (
+                    <div className={styles.formError}>
+                      <AlertIcon />
+                      <span>{reportHistoryError}</span>
+                    </div>
+                  )}
+
+                  {reportHistoryLoading && reportHistory.length === 0 ? (
+                    <div className={styles.activityEmpty}>
+                      <span className={styles.spinner} />
+                      <p>Cargando historial...</p>
+                    </div>
+                  ) : reportHistory.length === 0 ? (
+                    <div className={styles.activityEmpty}>
+                      <SearchDocumentIcon />
+                      <p>Aún no hay informes guardados.</p>
+                      <span>
+                        Cuando generes un informe, aparecerá aquí si se ha guardado
+                        correctamente.
+                      </span>
+                    </div>
+                  ) : (
+                    <div>
+                      {reportHistory.map((report) => {
+                        const completed = report.status === "completed";
+
+                        const reportTypeLabel =
+                          report.reportType === "collective"
+                            ? "Informe colectivo"
+                            : "Informe individual";
+
+                        return (
+                          <div className={styles.reportOutput} key={report.id}>
+                            <div className={styles.reportOutputIcon}>
+                              <DocumentIcon />
+                            </div>
+
+                            <div className={styles.reportOutputText}>
+                              <strong>
+                                {report.fileName || reportTypeLabel}
+                              </strong>
+
+                              <span>{reportTypeLabel}</span>
+
+                              <span>
+                                Periodo: {formatDate(report.periodFrom)} –{" "}
+                                {formatDate(report.periodTo)}
+                              </span>
+
+                              <span>
+                                Generado: {formatDate(report.createdAt)} ·{" "}
+                                {formatNumber(report.businessCount)}{" "}
+                                {report.businessCount === 1 ? "negocio" : "negocios"}{" "}
+                                · {formatFileSize(report.fileSize)}
+                              </span>
+
+                              {!completed && (
+                                <span>
+                                  {report.errorMessage ||
+                                    "La generación no se completó correctamente."}
+                                </span>
+                              )}
+                            </div>
+
+                            <div className={styles.reportOutputBadge}>
+                              {completed ? "ZIP" : "ERROR"}
+                            </div>
+
+                            <button
+                              type="button"
+                              className={styles.reportGenerateButton}
+                              onClick={() => handleDownloadReport(report)}
+                              disabled={
+                                !completed ||
+                                !report.fileName ||
+                                downloadingReportId !== null
+                              }
+                            >
+                              {downloadingReportId === report.id ? (
+                                "Descargando..."
+                              ) : (
+                                <>
+                                  <DownloadIcon />
+                                  <span>Descargar</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* DIRECTORIO DE NEGOCIOS */}
+            {section === "negocios" && (
+              <section className={styles.businessSection}>
+                <div className={styles.sectionHeading}>
+                  <div className={styles.sectionHeadingMain}>
+                    <div className={styles.sectionIcon}>
+                      <StoreIcon />
+                    </div>
+
+                    <div>
+                      <span className={styles.sectionLabel}>Directorio</span>
+
+                      <h2>Mis negocios</h2>
+
+                      <p>
+                        {summary.total} negocio{summary.total === 1 ? "" : "s"}{" "}
+                        registrado{summary.total === 1 ? "" : "s"} en TOCA.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.secondaryAction}
+                    onClick={startCreating}
+                  >
+                    <PlusIcon />
+                    <span>Nuevo negocio</span>
+                  </button>
+                </div>
+
+                {success && (
+                  <div className={styles.formSuccess}>
+                    <span className={styles.successCheck}>✓</span>
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                {error && !formOpen && (
+                  <div className={styles.formError}>
+                    <AlertIcon />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className={styles.businessTools}>
+                  <div className={styles.searchBox}>
+                    <SearchIcon />
+
+                    <input
+                      type="search"
+                      value={searchTerm}
+                      onChange={(event) => setSearchTerm(event.target.value)}
+                      placeholder="Buscar por nombre o slug..."
+                      aria-label="Buscar negocio"
+                    />
+                  </div>
+
+                  <div className={styles.filterGroup}>
+                    <div className={styles.filterLabel}>
+                      <FilterIcon />
+                      <span>Mostrar</span>
+                    </div>
+
+                    <div className={styles.filterButtons}>
+                      <button
+                        type="button"
+                        className={
+                          statusFilter === "all"
+                            ? styles.filterButtonActive
+                            : styles.filterButton
+                        }
+                        onClick={() => setStatusFilter("all")}
+                      >
+                        Todos
+                        <span>{summary.total}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          statusFilter === "active"
+                            ? styles.filterButtonActive
+                            : styles.filterButton
+                        }
+                        onClick={() => setStatusFilter("active")}
+                      >
+                        Activos
+                        <span>{summary.active}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className={
+                          statusFilter === "inactive"
+                            ? styles.filterButtonActive
+                            : styles.filterButton
+                        }
+                        onClick={() => setStatusFilter("inactive")}
+                      >
+                        Inactivos
+                        <span>{summary.inactive}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {businesses.length === 0 ? (
+                  <div className={styles.empty}>
+                    <div className={styles.emptyIcon}>
+                      <StoreIcon />
+                    </div>
+
+                    <h3>No hay negocios registrados</h3>
+
+                    <p>
+                      Crea el primer negocio para comenzar a utilizar TOCA.
+                    </p>
+
+                    <button
+                      type="button"
+                      className={styles.primaryButton}
+                      onClick={startCreating}
+                    >
+                      <PlusIcon />
+                      Crear negocio
+                    </button>
+                  </div>
+                ) : filteredBusinesses.length === 0 ? (
+                  <div className={styles.empty}>
+                    <div className={styles.emptyIcon}>
+                      <SearchIcon />
+                    </div>
+
+                    <h3>No hay resultados</h3>
+
+                    <p>
+                      No hay negocios que coincidan con la búsqueda o el filtro
+                      seleccionado.
+                    </p>
+
+                    <button
+                      type="button"
+                      className={styles.secondaryAction}
+                      onClick={() => {
+                        setSearchTerm("");
+                        setStatusFilter("all");
+                      }}
+                    >
+                      Limpiar filtros
+                    </button>
+                  </div>
+                ) : (
+                  <div className={styles.businessList}>
+                    {filteredBusinesses.map((business) => {
+                      const stats = statsByBusiness[business.id] || {
+                        visits: 0,
+                        googleClicks: 0,
+                        lastActivity: null,
+                      };
+
+                      return (
+                        <article
+                          className={`${styles.business} ${!business.active ? styles.businessInactive : ""
+                            }`}
+                          key={business.id}
+                        >
+                          <div className={styles.businessMain}>
+                            <div className={styles.businessIdentity}>
+                              <div className={styles.businessAvatar}>
+                                {business.logoUrl ? (
+                                  <Image
+                                    src={business.logoUrl}
+                                    alt=""
+                                    width={48}
+                                    height={48}
+                                  />
+                                ) : (
+                                  <StoreIcon />
+                                )}
+                              </div>
+
+                              <div className={styles.businessInfo}>
+                                <span
+                                  className={`${styles.businessStatus} ${!business.active
+                                    ? styles.businessStatusInactive
+                                    : ""
+                                    }`}
+                                >
+                                  {business.active
+                                    ? "Negocio activo"
+                                    : "Negocio inactivo"}
+                                </span>
+
+                                <h3>{business.name}</h3>
+
+                                <span className={styles.businessSlug}>
+                                  /{business.slug}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className={styles.businessMeta}>
+                              <div>
+                                <span>Visitas</span>
+                                <strong>{formatNumber(stats.visits)}</strong>
+                              </div>
+
+                              <div>
+                                <span>Interacciones</span>
+                                <strong>{formatNumber(stats.googleClicks)}</strong>
+                              </div>
+
+                              <div>
+                                <span>Última actividad</span>
+                                <strong>{formatDate(stats.lastActivity)}</strong>
+                              </div>
+
+                              <div>
+                                <span>Creado</span>
+                                <strong>
+                                  {formatCreatedDate(business.createdAt)}
+                                </strong>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className={styles.businessActions}>
+                            {business.active && (
+                              <a
+                                href={`/${business.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`${styles.actionButton} ${styles.actionPrimary}`}
+                              >
+                                <ExternalIcon />
+                                <span>Ver página</span>
+                              </a>
+                            )}
+
+                            <a
+                              href={`/estadisticas/${business.slug}`}
+                              className={styles.actionButton}
+                            >
+                              <ChartIcon />
+                              <span>Estadísticas</span>
+                            </a>
+
+                            {business.active && (
+                              <button
+                                type="button"
+                                className={styles.actionButton}
+                                onClick={() => startEditing(business)}
+                              >
+                                <EditIcon />
+                                <span>Editar</span>
+                              </button>
+                            )}
+
+                            {business.active ? (
+                              <button
+                                type="button"
+                                className={`${styles.actionButton} ${styles.actionDanger}`}
+                                onClick={() =>
+                                  deactivateBusiness(business.id, business.name)
+                                }
+                                disabled={
+                                  quickDeletingId === business.id ||
+                                  activatingId !== null
+                                }
+                              >
+                                <TrashIcon />
+                                <span>
+                                  {quickDeletingId === business.id
+                                    ? "Desactivando..."
+                                    : "Desactivar"}
+                                </span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                className={`${styles.actionButton} ${styles.actionReactivate}`}
+                                onClick={() =>
+                                  activateBusiness(business.id, business.name)
+                                }
+                                disabled={
+                                  activatingId === business.id ||
+                                  quickDeletingId !== null ||
+                                  deleting
+                                }
+                              >
+                                <ActivateIcon />
+                                <span>
+                                  {activatingId === business.id
+                                    ? "Reactivando..."
+                                    : "Reactivar"}
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* FORMULARIO DE NEGOCIO */}
+            {section === "negocios" && formOpen && (
+              <section className={styles.formSection}>
+                <div className={styles.sectionHeading}>
+                  <div className={styles.sectionHeadingMain}>
+                    <div className={styles.sectionIcon}>
+                      {editingId ? <EditIcon /> : <PlusIcon />}
+                    </div>
+
+                    <div>
+                      <span className={styles.sectionLabel}>
+                        {editingId ? "Configuración" : "Nuevo registro"}
+                      </span>
+
+                      <h2>
+                        {editingId ? "Editar negocio" : "Añadir negocio"}
+                      </h2>
+
+                      <p>
+                        {editingId
+                          ? "Modifica los datos asociados a este negocio."
+                          : "Crea una nueva página para un negocio de TOCA."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.cancelButton}
+                    onClick={closeForm}
+                    disabled={saving || deleting}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+
+                <form className={styles.form} onSubmit={handleSubmit}>
+                  <div className={styles.formGrid}>
+                    <div className={styles.field}>
+                      <label htmlFor="business-name">Nombre del negocio</label>
+
+                      <input
+                        id="business-name"
+                        type="text"
+                        value={form.name}
+                        onChange={(event) =>
+                          handleNameChange(event.target.value)
+                        }
+                        placeholder="Ej. Bar Pepe"
+                        required
+                      />
+                    </div>
+
+                    <div className={styles.field}>
+                      <label htmlFor="business-slug">Slug</label>
+
+                      <input
+                        id="business-slug"
+                        type="text"
+                        value={form.slug}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            slug: createSlug(event.target.value),
+                          }))
+                        }
+                        placeholder="bar-pepe"
+                        required
+                      />
+
+                      <span className={styles.help}>
+                        URL pública: <strong>/{form.slug || "..."}</strong>
+                      </span>
+                    </div>
+
+                    <div className={styles.fieldFull}>
+                      <label htmlFor="google-review-url">
+                        URL de reseñas de Google
+                      </label>
+
+                      <input
+                        id="google-review-url"
+                        type="url"
+                        value={form.googleReviewUrl}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            googleReviewUrl: event.target.value,
+                          }))
+                        }
+                        placeholder="https://g.page/r/..."
+                        required
+                      />
+
+                      <span className={styles.help}>
+                        Enlace al formulario de reseña del negocio en Google.
+                      </span>
+                    </div>
+
+                    <div className={styles.fieldFull}>
+                      <label htmlFor="logo-url">
+                        URL del logo
+                        <span className={styles.optional}> · opcional</span>
+                      </label>
+
+                      <input
+                        id="logo-url"
+                        type="url"
+                        value={form.logoUrl}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            logoUrl: event.target.value,
+                          }))
+                        }
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className={styles.formError}>
+                      <AlertIcon />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
+                  {editingId && (
+                    <div className={styles.dangerZone}>
+                      <div className={styles.dangerText}>
+                        <strong>Zona de peligro</strong>
+
+                        <span>
+                          Desactiva este negocio y retira su página pública. Sus
+                          estadísticas se conservarán.
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={saving || deleting}
+                        className={styles.deleteButton}
+                      >
+                        <TrashIcon />
+                        {deleting ? "Desactivando..." : "Desactivar negocio"}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className={styles.formActions}>
+                    <button
+                      type="button"
+                      className={styles.cancelFormButton}
+                      onClick={closeForm}
+                      disabled={saving || deleting}
+                    >
+                      Cancelar
+                    </button>
+
+                    <button
+                      type="submit"
+                      className={styles.primaryButton}
+                      disabled={saving || deleting}
+                    >
+                      {saving
+                        ? "Guardando..."
+                        : editingId
+                          ? "Guardar cambios"
+                          : "Crear negocio"}
+
+                      {!saving && !deleting && <ArrowIcon />}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            )}
+          </div>
+        </div>
         <footer className={styles.footer}>
           <Image
             src="/logo/toca.svg"
