@@ -1748,9 +1748,9 @@
   min-height: 50px;
   margin-top: 13px;
   padding: 0 15px;
-  border: 1px solid var(--toca-primary);
+  border: 1px solid #6366f1;
   border-radius: 11px;
-  background: var(--toca-primary);
+  background: #6366f1;
   color: #fff;
   font: inherit;
   font-size: 0.81rem;
@@ -1762,7 +1762,7 @@
 
 .loginButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  background: var(--toca-primary-dark);
+  background: #4f46e5;
   box-shadow: 0 9px 20px rgba(99, 102, 241, 0.23);
 }
 
@@ -1981,17 +1981,17 @@
   }
 
   .workspace {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
-}
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
 
-.sidebar {
-  position: sticky;
-  top: 8px;
-  align-self: stretch;
-  height: fit-content;
-  z-index: 50;
-}
+  .sidebar {
+    position: sticky;
+    top: 8px;
+    align-self: stretch;
+    height: fit-content;
+    z-index: 50;
+  }
 
   .mainContent {
     gap: 18px;

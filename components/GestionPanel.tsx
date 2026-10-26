@@ -2,9 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 import styles from "./GestionPanel.module.css";
 
+import GestionClientesPanel from "./GestionClientesPanel";
 import GestionNav from "./GestionNav";
 
 type BusinessStats = {
@@ -90,6 +92,7 @@ type GestionSection =
   | "negocios"
   | "estadisticas"
   | "informes"
+  | "clientes"
   | "archivo";
 
 type GestionPanelProps = {
@@ -1091,6 +1094,27 @@ export default function GestionPanel({
     }, 50);
   }
 
+  useEffect(() => {
+    if (section !== "negocios") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("nuevo") !== "1") {
+      return;
+    }
+
+    setEditingId(null);
+    setForm(emptyForm);
+    setError("");
+    setSuccess("");
+    setFormOpen(true);
+
+    window.history.replaceState(null, "", window.location.pathname);
+    window.setTimeout(scrollToForm, 500);
+  }, [section]);
+
   function startCreating() {
     setEditingId(null);
     setForm(emptyForm);
@@ -1569,14 +1593,13 @@ export default function GestionPanel({
                     </p>
                   </div>
 
-                  <button
-                    type="button"
+                  <Link
+                    href="/gestion/negocios?nuevo=1"
                     className={styles.dashboardCreateButton}
-                    onClick={startCreating}
                   >
                     <PlusIcon />
                     <span>Nuevo negocio</span>
-                  </button>
+                  </Link>
                 </div>
 
                 <div className={styles.dashboardStats}>
@@ -2320,6 +2343,8 @@ export default function GestionPanel({
                 </div>
               </section>
             )}
+
+            {section === "clientes" && <GestionClientesPanel />}
 
             {/* HISTORIAL DE INFORMES */}
             {section === "archivo" && (

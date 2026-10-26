@@ -10,6 +10,7 @@ const sections = [
   { href: "/gestion/negocios", label: "Negocios", icon: "store" },
   { href: "/gestion/estadisticas", label: "Estadísticas", icon: "chart" },
   { href: "/gestion/informes", label: "Informes", icon: "file" },
+  { href: "/gestion/clientes", label: "Clientes", icon: "users" },
   { href: "/gestion/archivo", label: "Archivo", icon: "history" },
 ];
 
@@ -63,6 +64,16 @@ function NavIcon({ name }: { name: string }) {
         </svg>
       );
 
+    case "users":
+      return (
+        <svg viewBox="0 0 24 24" {...common}>
+          <circle cx="9" cy="8" r="3.5" />
+          <path d="M2.5 20v-1.5a6.5 6.5 0 0 1 13 0V20" />
+          <path d="M16 4.8a3.5 3.5 0 0 1 0 6.4" />
+          <path d="M18 14a5 5 0 0 1 3.5 4.5V20" />
+        </svg>
+      );
+
     case "history":
       return (
         <svg viewBox="0 0 24 24" {...common}>
@@ -86,15 +97,14 @@ export default function GestionNav() {
         const active = section.exact
           ? pathname === section.href
           : pathname === section.href ||
-            pathname.startsWith(`${section.href}/`);
+          pathname.startsWith(`${section.href}/`);
 
         return (
           <Link
             key={section.href}
             href={section.href}
-            className={`${styles.link} ${
-              active ? styles.active : ""
-            }`}
+            className={`${styles.link} ${active ? styles.active : ""
+              }`}
             aria-current={active ? "page" : undefined}
           >
             <span className={styles.icon} aria-hidden="true">
