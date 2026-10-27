@@ -42,7 +42,6 @@
   line-height: 1.6;
 }
 
-
 .sectionHeading {
   display: flex;
   align-items: center;
@@ -110,7 +109,6 @@
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
 }
-
 
 .primaryButton {
   min-height: 46px;
@@ -191,8 +189,8 @@
   min-width: 160px;
 }
 
-.searchLabel>span,
-.formGrid>label {
+.searchLabel > span,
+.formGrid > label {
   color: #55596e;
   font-size: 0.79rem;
   font-weight: 650;
@@ -353,7 +351,7 @@
   gap: 17px;
 }
 
-.formGrid>label {
+.formGrid > label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -410,7 +408,7 @@
   letter-spacing: -0.02em;
 }
 
-.listHeader>span {
+.listHeader > span {
   color: var(--muted);
   font-size: 0.8rem;
 }
@@ -579,6 +577,315 @@
   border-top: 1px solid #f0f1f6;
 }
 
+/* Historial de compras */
+.purchaseSection {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.purchaseToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px 2px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.purchaseToggle:hover {
+  color: var(--primary-dark);
+}
+
+.purchaseToggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.purchaseToggle > span:first-child {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.purchaseToggle strong {
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.purchaseToggleDescription {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.purchaseToggleEnd {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.purchaseToggleEnd > strong {
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.purchaseToggleEnd > span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.purchaseContent {
+  display: grid;
+  gap: 16px;
+  padding: 12px 0 2px;
+}
+
+.purchaseSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f0f1f6;
+  border-bottom: 1px solid #f0f1f6;
+  background: transparent;
+}
+
+.purchaseSummary span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.purchaseSummary strong {
+  color: var(--text);
+  font-size: 1.08rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.purchaseMuted {
+  margin: 0;
+  padding: 12px 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.purchaseList {
+  display: grid;
+  gap: 0;
+}
+
+.purchaseCard {
+  padding: 15px 0;
+  border: 0;
+  border-bottom: 1px solid #f0f1f6;
+  border-radius: 0;
+  background: transparent;
+}
+
+.purchaseCard:first-child {
+  padding-top: 4px;
+}
+
+.purchaseCard:last-child {
+  border-bottom: 0;
+}
+
+.purchaseCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.purchaseCardHeader > div:first-child {
+  min-width: 0;
+}
+
+.purchaseCardHeader h5 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.purchaseCardHeader p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.purchaseSubtotal {
+  flex-shrink: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 750;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.purchaseDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 16px;
+  margin-top: 9px;
+  color: #666b80;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.purchaseNotes {
+  margin: 10px 0 0;
+  padding: 0;
+  color: #666b80;
+  font-size: 0.81rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.purchaseActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 9px;
+}
+
+.purchaseActions button {
+  min-height: 30px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.purchaseActions button:hover {
+  color: var(--primary-dark);
+}
+
+.purchaseActions button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+.purchaseForm {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fafbfe;
+}
+
+.purchaseForm > h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.purchaseFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.purchaseFormGrid label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  color: #55596e;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.purchaseFormGrid input,
+.purchaseFormGrid textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 10px 11px;
+  border: 1px solid #dfe2ed;
+  border-radius: 8px;
+  outline: none;
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.purchaseFormGrid input {
+  min-height: 40px;
+}
+
+.purchaseFormGrid textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.purchaseFormGrid input:focus,
+.purchaseFormGrid textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgb(99 102 241 / 10%);
+}
+
+.purchaseFullWidth {
+  grid-column: 1 / -1;
+}
+
+.purchaseCalculation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid #e8eaf2;
+  color: #55596e;
+  font-size: 0.84rem;
+}
+
+.purchaseCalculation strong {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Adaptación a pantallas medianas y móviles */
 @media (max-width: 760px) {
   .panel {
     padding: 18px;
@@ -645,6 +952,51 @@
   }
 }
 
+@media (max-width: 600px) {
+  .purchaseToggle {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .purchaseToggleEnd {
+    gap: 7px;
+  }
+
+  .purchaseToggleEnd > strong {
+    font-size: 0.82rem;
+  }
+
+  .purchaseToggleDescription {
+    max-width: 220px;
+  }
+
+  .purchaseSummary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .purchaseForm {
+    padding: 14px;
+  }
+
+  .purchaseFormGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .purchaseFullWidth {
+    grid-column: auto;
+  }
+
+  .purchaseCardHeader {
+    gap: 10px;
+  }
+
+  .purchaseDetails {
+    gap: 5px 12px;
+  }
+}
+
 @media (max-width: 420px) {
   .formActions {
     flex-direction: column-reverse;
@@ -652,5 +1004,37 @@
 
   .formActions button {
     width: 100%;
+  }
+
+  .purchaseToggle {
+    gap: 8px;
+  }
+
+  .purchaseToggleEnd {
+    gap: 5px;
+  }
+
+  .purchaseToggleEnd > strong {
+    font-size: 0.78rem;
+  }
+
+  .purchaseToggleEnd > span {
+    width: 21px;
+    height: 21px;
+  }
+
+  .purchaseCardHeader {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .purchaseSubtotal {
+    font-size: 0.88rem;
+  }
+
+  .purchaseCalculation {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
   }
 }
