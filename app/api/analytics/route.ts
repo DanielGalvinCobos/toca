@@ -1,6 +1,7 @@
-import { env } from "cloudflare:workers";
 
+import { env } from "cloudflare:workers";
 import { getBusinessById } from "@/lib/businesses";
+import { isAuthenticated } from "@/lib/analyticsAuth";
 
 type AnalyticsEvent = {
   businessId?: string;
@@ -22,12 +23,9 @@ function getMadridDate() {
 
 async function businessExists(businessId: string) {
   const result = await env.toca_analytics
-    .prepare(`
-      SELECT id
-      FROM businesses
-      WHERE id = ?
-      LIMIT 1
-    `)
+    .prepare(
+      `SELECT id FROM businesses WHERE id = ? LIMIT 1`
+    )
     .bind(businessId)
     .first();
 
@@ -71,22 +69,16 @@ export async function POST(request: Request) {
     const googleClicks = event === "google_click" ? 1 : 0;
 
     await env.toca_analytics
-      .prepare(`
-        INSERT INTO analytics_daily (
-          business_id,
-          date,
-          source,
-          visits,
-          google_clicks,
-          last_activity
-        )
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT (business_id, date, source)
-        DO UPDATE SET
-          visits = visits + excluded.visits,
-          google_clicks = google_clicks + excluded.google_clicks,
-          last_activity = excluded.last_activity
-      `)
+      .prepare(
+        `INSERT INTO analytics_daily
+          (business_id, date, source, visits, google_clicks, last_activity)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT (business_id, date, source)
+         DO UPDATE SET
+           visits = visits + excluded.visits,
+           google_clicks = google_clicks + excluded.google_clicks,
+           last_activity = excluded.last_activity`
+      )
       .bind(
         businessId,
         today,
@@ -97,7 +89,14 @@ export async function POST(request: Request) {
       )
       .run();
 
-    return Response.json({ success: true });
+    return Response.json(
+      { success: true },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch {
     return Response.json(
       { error: "No se pudo registrar la estadística." },
@@ -108,13 +107,35 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    // Las estadísticas solo están disponibles para una sesión válida.
+    const authenticated = await isAuthenticated(request);
+
+    if (!authenticated) {
+      return Response.json(
+        { error: "No autorizado." },
+        {
+          status: 401,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
+      );
+    }
+
     const url = new URL(request.url);
-    const businessId = url.searchParams.get("businessId")?.trim();
+    const businessId = url.searchParams
+      .get("businessId")
+      ?.trim();
 
     if (!businessId) {
       return Response.json(
         { error: "Falta el businessId." },
-        { status: 400 }
+        {
+          status: 400,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
@@ -123,22 +144,22 @@ export async function GET(request: Request) {
     if (!business) {
       return Response.json(
         { error: "El negocio no existe." },
-        { status: 404 }
+        {
+          status: 404,
+          headers: {
+            "Cache-Control": "no-store",
+          },
+        }
       );
     }
 
     const result = await env.toca_analytics
-      .prepare(`
-        SELECT
-          date,
-          source,
-          visits,
-          google_clicks,
-          last_activity
-        FROM analytics_daily
-        WHERE business_id = ?
-        ORDER BY date ASC, source ASC
-      `)
+      .prepare(
+        `SELECT date, source, visits, google_clicks, last_activity
+         FROM analytics_daily
+         WHERE business_id = ?
+         ORDER BY date ASC, source ASC`
+      )
       .bind(businessId)
       .all();
 
@@ -148,24 +169,19 @@ export async function GET(request: Request) {
     let totalGoogleClicks = 0;
 
     const bySource = {
-      nfc: {
-        visits: 0,
-        googleClicks: 0,
-      },
-      qr: {
-        visits: 0,
-        googleClicks: 0,
-      },
-      direct: {
-        visits: 0,
-        googleClicks: 0,
-      },
+      nfc: { visits: 0, googleClicks: 0 },
+      qr: { visits: 0, googleClicks: 0 },
+      direct: { visits: 0, googleClicks: 0 },
     };
 
     let lastActivity: string | null = null;
 
     for (const row of rows) {
-      const source = row.source as "nfc" | "qr" | "direct";
+      const source = row.source as
+        | "nfc"
+        | "qr"
+        | "direct";
+
       const visits = Number(row.visits);
       const googleClicks = Number(row.google_clicks);
 
@@ -187,22 +203,36 @@ export async function GET(request: Request) {
         ? (totalGoogleClicks / totalVisits) * 100
         : 0;
 
-    return Response.json({
-      businessId,
-      businessCreatedAt: business.createdAt,
-      totals: {
-        visits: totalVisits,
-        googleClicks: totalGoogleClicks,
-        interactionRate: Number(interactionRate.toFixed(2)),
+    return Response.json(
+      {
+        businessId,
+        businessCreatedAt: business.createdAt,
+        totals: {
+          visits: totalVisits,
+          googleClicks: totalGoogleClicks,
+          interactionRate: Number(
+            interactionRate.toFixed(2)
+          ),
+        },
+        bySource,
+        lastActivity,
+        daily: rows,
       },
-      bySource,
-      lastActivity,
-      daily: rows,
-    });
+      {
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
+    );
   } catch {
     return Response.json(
       { error: "No se pudieron obtener las estadísticas." },
-      { status: 500 }
+      {
+        status: 500,
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      }
     );
   }
 }

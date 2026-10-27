@@ -17,7 +17,7 @@
     "@cloudflare/workers-response-store": "^0.1.0-beta.2",
     "@vinext/cloudflare": "^1.0.0-beta.10",
     "fflate": "^0.8.3",
-    "next": "16.3.5",
+    "next": "^16.4.3",
     "pdf-lib": "^1.17.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -30,9 +30,16 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-rsc": "^0.5.35",
     "eslint": "^9",
-    "eslint-config-next": "16.3.5",
+    "eslint-config-next": "^16.4.3",
     "react-server-dom-webpack": "^19.2.8",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^8.3.3"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "@cloudflare/vite-plugin": {
+      "wrangler": "4.153.0",
+      "miniflare": "5.20261023.0-beta"
+    }
+  }
 }
